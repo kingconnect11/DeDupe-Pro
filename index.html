@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeDupe Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #16161f;
+  --bg-elevated: #1c1c28;
+  --bg-hover: #22222f;
+  --border: #2a2a3a;
+  --border-light: #35354a;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9090a8;
+  --text-muted: #606078;
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-dim: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+  --success: #34d399;
+  --success-dim: rgba(52, 211, 153, 0.12);
+  --warning: #fbbf24;
+  --warning-dim: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-dim: rgba(248, 113, 113, 0.12);
+  --info: #60a5fa;
+  --info-dim: rgba(96, 165, 250, 0.12);
+  --orange: #fb923c;
+  --orange-dim: rgba(251, 146, 60, 0.12);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100%;
+  overflow: hidden;
+}
+
+::selection { background: var(--accent); color: white; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── Header ───────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 12px rgba(99,102,241,0.3);
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.logo-text span { color: var(--text-muted); font-weight: 400; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-stats {
+  display: flex;
+  gap: 20px;
+  margin-right: 16px;
+}
+
+.header-stat {
+  text-align: center;
+}
+
+.header-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+}
+
+.header-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Buttons ──────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.btn:hover { background: var(--bg-hover); border-color: var(--border-light); }
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover { background: var(--accent-dim); }
+
+.btn-success {
+  background: #059669;
+  border-color: #059669;
+  color: white;
+}
+
+.btn-success:hover { background: #047857; }
+
+.btn-danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn-danger:hover { background: var(--danger-dim); }
+
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+.btn-ghost { background: transparent; border-color: transparent; }
+.btn-ghost:hover { background: var(--bg-hover); border-color: var(--border); }
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Main Layout ──────────────────────── */
+.main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── Screen: Upload ───────────────────── */
+.screen { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.screen.active { display: flex; }
+
+.upload-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.upload-container {
+  max-width: 800px;
+  width: 100%;
+}
+
+.upload-hero {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.upload-hero h1 {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.upload-hero p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.drop-zones {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0;
+  align-items: center;
+}
+
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  background: var(--bg-secondary);
+  position: relative;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.drop-zone.loaded {
+  border-color: var(--success);
+  border-style: solid;
+  background: var(--success-dim);
+}
+
+.drop-zone-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.drop-zone-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.drop-zone-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.drop-zone-info {
+  margin-top: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--success);
+}
+
+.drop-zone-versus {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 0 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.upload-actions {
+  margin-top: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-actions .btn-primary {
+  padding: 14px 40px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.settings-row input[type="range"] {
+  width: 160px;
+  accent-color: var(--accent);
+}
+
+.settings-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.settings-row input[type="checkbox"] { accent-color: var(--accent); }
+
+/* ── Screen: Review ───────────────────── */
+.review-screen {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.review-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.review-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.confidence-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.confidence-tab {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.confidence-tab:hover { background: var(--bg-hover); color: var(--text-secondary); }
+
+.confidence-tab.active {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.confidence-tab .tab-count {
+  margin-left: 5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  background: var(--bg-hover);
+}
+
+.confidence-tab.active .tab-count {
+  background: var(--accent-glow);
+  color: var(--accent-light);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  gap: 8px;
+}
+
+.search-box input {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 0;
+  outline: none;
+  width: 200px;
+}
+
+.search-box input::placeholder { color: var(--text-muted); }
+
+.review-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Group Card ───────────────────────── */
+.group-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all var(--transition);
+}
+
+.group-card:hover { border-color: var(--border-light); }
+.group-card.approved { border-color: var(--success); background: rgba(52,211,153,0.03); }
+.group-card.skipped { opacity: 0.5; }
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.group-confidence {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.conf-high { background: var(--success-dim); color: var(--success); }
+.conf-medium { background: var(--warning-dim); color: var(--warning); }
+.conf-low { background: var(--orange-dim); color: var(--orange); }
+.conf-very-low { background: var(--danger-dim); color: var(--danger); }
+
+.group-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.group-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+}
+
+.group-meta span { display: flex; align-items: center; gap: 4px; }
+
+.group-warnings {
+  display: flex;
+  gap: 6px;
+  margin-right: 12px;
+}
+
+.warning-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--warning-dim);
+  color: var(--warning);
+}
+
+.group-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.group-body {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: 18px;
+}
+
+.group-card.expanded .group-body { display: block; }
+
+.contacts-comparison {
+  display: grid;
+  gap: 12px;
+}
+
+.contacts-comparison.two-col { grid-template-columns: 1fr 1fr; }
+.contacts-comparison.three-col { grid-template-columns: 1fr 1fr 1fr; }
+
+.contact-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.contact-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.contact-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.avatar-1 { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.avatar-2 { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+.avatar-3 { background: linear-gradient(135deg, #10b981, #06b6d4); }
+
+.contact-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.contact-source {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.contact-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contact-field {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  align-items: flex-start;
+}
+
+.field-icon {
+  color: var(--text-muted);
+  font-size: 12px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.field-value { color: var(--text-secondary); word-break: break-all; }
+.field-value.highlight { color: var(--accent-light); }
+
+.merge-preview {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--accent-glow);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: var(--radius);
+}
+
+.merge-preview h4 {
+  font-size: 13px;
+  color: var(--accent-light);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.match-factors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.match-factor {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* ── Edit Modal ───────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 { font-size: 17px; font-weight: 600; }
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.modal-body {
+  padding: 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.form-input:focus { border-color: var(--accent); }
+
+.form-input-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.form-input-row .form-input { flex: 1; }
+
+.form-input-row .btn-icon {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ── Screen: Results ──────────────────── */
+.results-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.results-container {
+  max-width: 700px;
+  width: 100%;
+  text-align: center;
+}
+
+.results-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.results-container h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  margin-bottom: 12px;
+}
+
+.results-container p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.results-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.result-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.result-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.result-stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.results-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ── Progress Bar ─────────────────────── */
+.progress-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.progress-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  min-width: 400px;
+}
+
+.progress-card h3 { margin-bottom: 8px; font-size: 17px; }
+.progress-card p { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  border-radius: 3px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
+/* ── Toast ─────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  animation: slideIn 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.info { border-left: 3px solid var(--info); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ── Review Bottom Bar ────────────────── */
+.review-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.review-progress {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.review-progress-bar {
+  width: 200px;
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.review-progress-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Keyboard Shortcut Hints ──────────── */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 22px;
+}
+
+/* ── Empty State ──────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: var(--text-muted);
+}
+
+.empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state h3 { font-size: 16px; margin-bottom: 6px; color: var(--text-secondary); }
+
+/* ── Responsive ───────────────────────── */
+@media (max-width: 768px) {
+  .drop-zones { grid-template-columns: 1fr; gap: 16px; }
+  .drop-zone-versus { display: none; }
+  .contacts-comparison { grid-template-columns: 1fr !important; }
+  .results-stats { grid-template-columns: repeat(2, 1fr); }
+  .confidence-tabs { flex-wrap: wrap; }
+  .header-stats { display: none; }
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">&#x2728;</div>
+      <div class="logo-text">DeDupe Pro</div>
+    </div>
+    <div class="header-actions">
+      <div class="header-stats hidden" id="headerStats">
+        <div class="header-stat">
+          <div class="header-stat-value" id="statTotal">0</div>
+          <div class="header-stat-label">Total</div>
+        </div>
+        <div class="header-stat">
+          <div class="header-stat-value" id="statDupes">0</div>
+          <div class="header-stat-label">Groups</div>
+        </div>
+        <div class="header-stat">
+          <div class="header-stat-value" id="statMerged">0</div>
+          <div class="header-stat-label">Merged</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost hidden" id="btnUndo" onclick="undoLast()" title="Undo (Ctrl+Z)">&#x21A9; Undo</button>
+      <button class="btn hidden" id="btnStartOver" onclick="startOver()">Start Over</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- ── Upload Screen ── -->
+    <section class="screen active" id="screenUpload">
+      <div class="upload-screen">
+        <div class="upload-container">
+          <div class="upload-hero">
+            <h1>DeDupe Your Contacts</h1>
+            <p>Drop two vCard files and let smart matching find duplicates using names, emails, phones, nicknames, and phonetic similarity.</p>
+          </div>
+          <div class="drop-zones">
+            <div class="drop-zone" id="dropZone1" onclick="document.getElementById('fileInput1').click()">
+              <span class="drop-zone-icon">&#x1F4C1;</span>
+              <div class="drop-zone-title">First Contact File</div>
+              <div class="drop-zone-sub">Drop .vcf file or click to browse</div>
+              <div class="drop-zone-info hidden" id="fileInfo1"></div>
+              <input type="file" id="fileInput1" accept=".vcf,.vcard" style="display:none">
+            </div>
+            <div class="drop-zone-versus">vs</div>
+            <div class="drop-zone" id="dropZone2" onclick="document.getElementById('fileInput2').click()">
+              <span class="drop-zone-icon">&#x1F4C2;</span>
+              <div class="drop-zone-title">Second Contact File</div>
+              <div class="drop-zone-sub">Drop .vcf file or click to browse</div>
+              <div class="drop-zone-info hidden" id="fileInfo2"></div>
+              <input type="file" id="fileInput2" accept=".vcf,.vcard" style="display:none">
+            </div>
+          </div>
+          <div class="upload-actions">
+            <button class="btn btn-primary" id="btnFindDupes" disabled onclick="findDuplicates()">
+              &#x1F50D; Find Duplicates
+            </button>
+            <div class="settings-row">
+              <span>Threshold:</span>
+              <input type="range" id="thresholdSlider" min="30" max="95" value="50" oninput="this.nextElementSibling.textContent = this.value + '%'">
+              <span>50%</span>
+              <label>
+                <input type="checkbox" id="autoMerge"> Auto-merge above 95%
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Review Screen ── -->
+    <section class="screen" id="screenReview">
+      <div class="review-screen">
+        <div class="review-toolbar">
+          <div class="review-toolbar-left">
+            <div class="confidence-tabs" id="confidenceTabs"></div>
+          </div>
+          <div class="review-toolbar-right">
+            <div class="search-box">
+              <span>&#x1F50D;</span>
+              <input type="text" id="searchInput" placeholder="Search contacts..." oninput="filterGroups()">
+            </div>
+            <button class="btn btn-sm btn-success" onclick="approveAllVisible()">&#x2714; Approve Visible</button>
+          </div>
+        </div>
+        <div class="review-body" id="reviewBody">
+          <div class="group-list" id="groupList"></div>
+        </div>
+        <div class="review-bottom-bar">
+          <div class="review-progress">
+            <span id="progressText">0 / 0 reviewed</span>
+            <div class="review-progress-bar">
+              <div class="review-progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+          <div class="page-nav">
+            <button class="btn btn-sm" id="btnPrevPage" onclick="changePage(-1)" disabled>&#x25C0; Prev</button>
+            <span id="pageInfo">Page 1</span>
+            <button class="btn btn-sm" id="btnNextPage" onclick="changePage(1)" disabled>Next &#x25B6;</button>
+          </div>
+          <button class="btn btn-success" id="btnExport" onclick="showExport()">
+            &#x1F4BE; Export Merged Contacts
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Results Screen ── -->
+    <section class="screen" id="screenResults">
+      <div class="results-screen">
+        <div class="results-container">
+          <div class="results-icon">&#x1F389;</div>
+          <h1>Merge Complete</h1>
+          <p id="resultsMessage"></p>
+          <div class="results-stats" id="resultsStats"></div>
+          <div class="results-actions">
+            <button class="btn btn-primary" onclick="downloadVCard()">&#x1F4BE; Download vCard</button>
+            <button class="btn" onclick="downloadCSV()">&#x1F4CA; Download CSV</button>
+            <button class="btn" onclick="downloadJSON()">&#x1F4DD; Download JSON</button>
+            <button class="btn btn-ghost" onclick="startOver()">&#x21A9; Start Over</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+//  CONTACT DEDUPLICATOR v6 - Core Engine
+// ─────────────────────────────────────────────────────────────────
+
+// ── State ────────────────────────────────────────────────────────
+const state = {
+  file1Contacts: [],
+  file2Contacts: [],
+  allContacts: [],
+  groups: [],           // { contacts, confidence, factors, warnings, merged, status }
+  filteredGroups: [],
+  uniqueContacts: [],   // contacts not in any group
+  undoStack: [],
+  currentTab: 'all',
+  currentPage: 0,
+  pageSize: 80,
+  searchQuery: '',
+  threshold: 50,
+  autoMerge: false,
+};
+
+// ── Nickname Map ─────────────────────────────────────────────────
+const NICKNAMES = {
+  robert: ['bob','rob','robbie','bobby','bert'],
+  william: ['will','bill','billy','willy','liam'],
+  james: ['jim','jimmy','jamie','jem'],
+  john: ['jack','johnny','jon'],
+  richard: ['rick','rich','dick','ricky'],
+  charles: ['charlie','chuck','chas'],
+  thomas: ['tom','tommy','thom'],
+  joseph: ['joe','joey','jo'],
+  edward: ['ed','eddie','ted','teddy','ned'],
+  michael: ['mike','mikey','mick'],
+  david: ['dave','davy'],
+  daniel: ['dan','danny'],
+  matthew: ['matt','matty'],
+  andrew: ['andy','drew'],
+  steven: ['steve','stevie'],
+  stephen: ['steve','stevie'],
+  christopher: ['chris','kit','topher'],
+  nicholas: ['nick','nicky','nico'],
+  benjamin: ['ben','benny','benji'],
+  alexander: ['alex','xander','alec','sandy'],
+  elizabeth: ['liz','lizzy','beth','betty','eliza','libby','liza'],
+  jennifer: ['jen','jenny','jenn'],
+  katherine: ['kate','kathy','katie','cathy','kit'],
+  catherine: ['kate','kathy','katie','cathy','cat'],
+  margaret: ['maggie','meg','peggy','marge','madge','greta'],
+  patricia: ['pat','patty','trish','tricia'],
+  barbara: ['barb','barbie','babs'],
+  dorothy: ['dot','dottie','dolly'],
+  susan: ['sue','susie','suzy'],
+  jessica: ['jess','jessie'],
+  sarah: ['sally','sadie'],
+  rebecca: ['becca','becky','bec'],
+  samantha: ['sam','sammy'],
+  deborah: ['deb','debbie','debby'],
+  victoria: ['vicky','tori','vic'],
+  abigail: ['abby','gail'],
+  gabrielle: ['gabby','gabi'],
+  jacqueline: ['jackie','jac'],
+  penelope: ['penny','pen'],
+  theodore: ['theo','ted','teddy'],
+  timothy: ['tim','timmy'],
+  gregory: ['greg','gregg'],
+  lawrence: ['larry','lars'],
+  leonard: ['leo','len','lenny'],
+  raymond: ['ray'],
+  ronald: ['ron','ronnie'],
+  anthony: ['tony','ant'],
+  francis: ['frank','fran'],
+  phillip: ['phil'],
+  philip: ['phil'],
+  jonathan: ['jon','jonny','nathan'],
+  nathaniel: ['nate','nathan','nat'],
+  frederick: ['fred','freddy','fritz'],
+  gerald: ['gerry','jerry'],
+  harold: ['harry','hal'],
+  henrietta: ['hettie', 'etta'],
+  henry: ['harry','hank','hal'],
+  albert: ['al','bert','bertie'],
+  arthur: ['art','artie'],
+  walter: ['walt','wally'],
+  peter: ['pete','petey'],
+  patrick: ['pat','paddy','rick'],
+  kenneth: ['ken','kenny'],
+  donald: ['don','donny'],
+  samuel: ['sam','sammy'],
+  douglas: ['doug','dougie'],
+  eugene: ['gene'],
+  vincent: ['vince','vin','vinny'],
+  alexander: ['alex','al','xander'],
+  maximilian: ['max'],
+  yvonne: ['vonnie'],
+};
+
+// Build reverse lookup
+const nicknameToCanonical = {};
+for (const [canonical, nicks] of Object.entries(NICKNAMES)) {
+  nicknameToCanonical[canonical] = canonical;
+  for (const nick of nicks) {
+    if (!nicknameToCanonical[nick]) nicknameToCanonical[nick] = canonical;
+  }
+}
+
+// ── Soundex ──────────────────────────────────────────────────────
+function soundex(s) {
+  if (!s) return '';
+  s = s.toUpperCase().replace(/[^A-Z]/g, '');
+  if (!s) return '';
+  const map = {B:'1',F:'1',P:'1',V:'1',C:'2',G:'2',J:'2',K:'2',Q:'2',S:'2',X:'2',Z:'2',D:'3',T:'3',L:'4',M:'5',N:'5',R:'6'};
+  let result = s[0];
+  let lastCode = map[s[0]] || '';
+  for (let i = 1; i < s.length && result.length < 4; i++) {
+    const code = map[s[i]] || '';
+    if (code && code !== lastCode) { result += code; }
+    if (code) lastCode = code;
+    else lastCode = '';
+  }
+  return (result + '000').slice(0, 4);
+}
+
+// ── vCard Parser ─────────────────────────────────────────────────
+function parseVCards(text) {
+  const contacts = [];
+  const blocks = text.split(/(?=BEGIN:VCARD)/i);
+  for (const block of blocks) {
+    if (!/BEGIN:VCARD/i.test(block)) continue;
+    const contact = { raw: block, emails: [], phones: [], name: '', org: '', title: '', birthday: '', url: '', notes: '', photo: '' };
+    const lines = unfoldVCard(block).split(/\r?\n/);
+    for (const line of lines) {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx < 0) continue;
+      const propPart = line.substring(0, colonIdx).toUpperCase();
+      const val = line.substring(colonIdx + 1).trim();
+      if (!val) continue;
+      const propName = propPart.split(';')[0];
+      if (propName === 'FN') {
+        contact.name = val;
+      } else if (propName === 'N') {
+        if (!contact.name) {
+          const parts = val.split(';');
+          contact.name = [parts[1] || '', parts[0] || ''].filter(Boolean).join(' ').trim();
+        }
+        contact._nField = val;
+      } else if (propName === 'EMAIL') {
+        contact.emails.push(val);
+      } else if (propName === 'TEL') {
+        contact.phones.push(val);
+      } else if (propName === 'ORG') {
+        contact.org = val.replace(/;/g, ', ');
+      } else if (propName === 'TITLE') {
+        contact.title = val;
+      } else if (propName === 'BDAY') {
+        contact.birthday = val;
+      } else if (propName === 'URL') {
+        contact.url = val;
+      } else if (propName === 'NOTE') {
+        contact.notes = val;
+      } else if (propName === 'PHOTO') {
+        contact.photo = val;
+      }
+    }
+    if (contact.name || contact.emails.length || contact.phones.length) {
+      contacts.push(contact);
+    }
+  }
+  return contacts;
+}
+
+function unfoldVCard(text) {
+  return text.replace(/\r?\n[ \t]/g, '');
+}
+
+// ── Normalizers ──────────────────────────────────────────────────
+function normalizeName(name) {
+  if (!name) return '';
+  return name.toLowerCase()
+    .replace(/\b(mr|mrs|ms|dr|prof|jr|sr|ii|iii|iv|phd|md|esq)\b\.?/gi, '')
+    .replace(/[^a-z\s'-]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function canonicalNameParts(name) {
+  const n = normalizeName(name);
+  // Handle "Last, First" format
+  if (n.includes(',')) {
+    const [last, ...rest] = n.split(',').map(s => s.trim());
+    return [...rest.join(' ').split(/\s+/), last].filter(Boolean).sort();
+  }
+  return n.split(/\s+/).filter(Boolean).sort();
+}
+
+function normalizeEmail(email) {
+  if (!email) return '';
+  email = email.toLowerCase().trim();
+  const [localPart, domain] = email.split('@');
+  if (!domain) return email;
+  let d = domain === 'googlemail.com' ? 'gmail.com' : domain;
+  let local = localPart;
+  if (d === 'gmail.com') {
+    local = local.replace(/\./g, '').replace(/\+.*$/, '');
+  }
+  return local + '@' + d;
+}
+
+function normalizePhone(phone) {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '');
+  // Remove leading 1 if it's a US number (10 digits remaining)
+  if (digits.startsWith('1') && digits.length === 11) return digits.substring(1);
+  return digits;
+}
+
+function last7(phone) {
+  const d = normalizePhone(phone);
+  return d.length >= 7 ? d.slice(-7) : d;
+}
+
+// ── Match Confidence Calculator ──────────────────────────────────
+function calculateConfidence(c1, c2) {
+  let score = 0;
+  const factors = [];
+  const warnings = [];
+
+  // Email matching
+  const emails1 = c1.emails.map(normalizeEmail);
+  const emails2 = c2.emails.map(normalizeEmail);
+  const emailMatch = emails1.some(e => emails2.includes(e));
+  if (emailMatch) { score += 50; factors.push('Email match'); }
+
+  // Phone matching
+  const phones1 = c1.phones.map(last7);
+  const phones2 = c2.phones.map(last7);
+  const phoneMatch = phones1.some(p => p.length >= 7 && phones2.includes(p));
+  if (phoneMatch) { score += 40; factors.push('Phone match'); }
+
+  // Full phone match
+  const fullPhones1 = c1.phones.map(normalizePhone);
+  const fullPhones2 = c2.phones.map(normalizePhone);
+  if (fullPhones1.some(p => p.length >= 10 && fullPhones2.includes(p))) {
+    if (!phoneMatch) { score += 40; factors.push('Full phone match'); }
+  }
+
+  // Name matching
+  const parts1 = canonicalNameParts(c1.name);
+  const parts2 = canonicalNameParts(c2.name);
+
+  if (parts1.length && parts2.length) {
+    const name1 = parts1.join(' ');
+    const name2 = parts2.join(' ');
+
+    if (name1 === name2) {
+      score += 50;
+      factors.push('Exact name match');
+    } else {
+      // Nickname check - sort AFTER mapping to canonical names for proper comparison
+      const canonical1 = parts1.map(p => nicknameToCanonical[p] || p).sort();
+      const canonical2 = parts2.map(p => nicknameToCanonical[p] || p).sort();
+      if (canonical1.join(' ') === canonical2.join(' ')) {
+        score += 45;
+        factors.push('Nickname match');
+      } else {
+        // Soundex check
+        const sx1 = parts1.map(soundex).join('');
+        const sx2 = parts2.map(soundex).join('');
+        if (sx1 === sx2 && sx1) {
+          score += 35;
+          factors.push('Phonetic match');
+        } else {
+          // First initial + last name match
+          if (parts1.length >= 2 && parts2.length >= 2) {
+            const sorted1 = [...parts1].sort();
+            const sorted2 = [...parts2].sort();
+            const last1 = sorted1[sorted1.length - 1];
+            const last2 = sorted2[sorted2.length - 1];
+            if (last1 === last2 && sorted1[0][0] === sorted2[0][0]) {
+              score += 25;
+              factors.push('Initial + last name');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Organization bonus
+  if (c1.org && c2.org) {
+    if (c1.org.toLowerCase() === c2.org.toLowerCase()) {
+      score += 10;
+      factors.push('Same organization');
+    } else {
+      warnings.push('Different organizations');
+    }
+  }
+
+  // Warnings
+  if (emailMatch && c1.emails.length && c2.emails.length) {
+    const domains1 = c1.emails.map(e => e.split('@')[1]).filter(Boolean);
+    const domains2 = c2.emails.map(e => e.split('@')[1]).filter(Boolean);
+    if (domains1.length && domains2.length && !domains1.some(d => domains2.includes(d))) {
+      warnings.push('Different email domains');
+    }
+  }
+
+  if (!emailMatch && !phoneMatch && score > 0) {
+    warnings.push('Name-only match');
+  }
+
+  return { score: Math.min(100, score), factors, warnings };
+}
+
+// ── Duplicate Finder (Bucketed O(n)) ─────────────────────────────
+function findDuplicateGroups(contacts, threshold) {
+  const emailBucket = {};
+  const phoneBucket = {};
+  const nameBucket = {};
+  const soundexBucket = {};
+
+  // Phase 1: Build buckets
+  contacts.forEach((c, i) => {
+    c._idx = i;
+    c.emails.forEach(e => {
+      const ne = normalizeEmail(e);
+      if (ne) { (emailBucket[ne] = emailBucket[ne] || []).push(i); }
+    });
+    c.phones.forEach(p => {
+      const l7 = last7(p);
+      if (l7.length >= 7) { (phoneBucket[l7] = phoneBucket[l7] || []).push(i); }
+    });
+    const parts = canonicalNameParts(c.name);
+    if (parts.length) {
+      const nameKey = parts.join('|');
+      (nameBucket[nameKey] = nameBucket[nameKey] || []).push(i);
+      // Nickname-expanded
+      const nickKey = parts.map(p => nicknameToCanonical[p] || p).sort().join('|');
+      if (nickKey !== nameKey) {
+        (nameBucket[nickKey] = nameBucket[nickKey] || []).push(i);
+      }
+      // Soundex
+      const sxKey = parts.map(soundex).join('|');
+      if (sxKey) { (soundexBucket[sxKey] = soundexBucket[sxKey] || []).push(i); }
+    }
+  });
+
+  // Phase 2: Candidate pairs
+  const candidatePairs = new Set();
+  function addPairs(bucket) {
+    for (const indices of Object.values(bucket)) {
+      if (indices.length < 2 || indices.length > 50) continue;
+      for (let a = 0; a < indices.length; a++) {
+        for (let b = a + 1; b < indices.length; b++) {
+          const key = indices[a] < indices[b] ? `${indices[a]}:${indices[b]}` : `${indices[b]}:${indices[a]}`;
+          candidatePairs.add(key);
+        }
+      }
+    }
+  }
+  addPairs(emailBucket);
+  addPairs(phoneBucket);
+  addPairs(nameBucket);
+  addPairs(soundexBucket);
+
+  // Phase 3: Evaluate pairs
+  const edges = [];
+  for (const pair of candidatePairs) {
+    const [a, b] = pair.split(':').map(Number);
+    const { score, factors, warnings } = calculateConfidence(contacts[a], contacts[b]);
+    if (score >= threshold) {
+      edges.push({ a, b, score, factors, warnings });
+    }
+  }
+
+  // Phase 4: BFS connected components
+  const adj = {};
+  const edgeData = {};
+  for (const e of edges) {
+    (adj[e.a] = adj[e.a] || []).push(e.b);
+    (adj[e.b] = adj[e.b] || []).push(e.a);
+    const key = Math.min(e.a, e.b) + ':' + Math.max(e.a, e.b);
+    if (!edgeData[key] || e.score > edgeData[key].score) {
+      edgeData[key] = e;
+    }
+  }
+
+  const visited = new Set();
+  const groups = [];
+  for (const startStr of Object.keys(adj)) {
+    const start = Number(startStr);
+    if (visited.has(start)) continue;
+    const queue = [start];
+    visited.add(start);
+    const component = [];
+    let bestScore = 0;
+    let allFactors = [];
+    let allWarnings = [];
+    while (queue.length) {
+      const node = queue.shift();
+      component.push(node);
+      for (const neighbor of (adj[node] || [])) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push(neighbor);
+        }
+        const key = Math.min(node, neighbor) + ':' + Math.max(node, neighbor);
+        const ed = edgeData[key];
+        if (ed && ed.score > bestScore) {
+          bestScore = ed.score;
+          allFactors = ed.factors;
+          allWarnings = ed.warnings;
+        }
+      }
+    }
+    if (component.length >= 2) {
+      groups.push({
+        contacts: component.map(i => contacts[i]),
+        confidence: bestScore,
+        factors: allFactors,
+        warnings: allWarnings,
+        status: 'pending',
+        merged: null,
+      });
+    }
+  }
+
+  // Find unique contacts
+  const inGroup = new Set();
+  for (const g of groups) g.contacts.forEach(c => inGroup.add(c._idx));
+  const unique = contacts.filter((c, i) => !inGroup.has(i));
+
+  return { groups: groups.sort((a, b) => b.confidence - a.confidence), unique };
+}
+
+// ── Merge Contacts ───────────────────────────────────────────────
+function mergeContacts(contacts) {
+  // Pick longest/most complete name
+  let bestName = '';
+  let bestNameWords = 0;
+  for (const c of contacts) {
+    const words = c.name.trim().split(/\s+/).length;
+    if (words > bestNameWords || (words === bestNameWords && c.name.length > bestName.length)) {
+      bestName = c.name;
+      bestNameWords = words;
+    }
+  }
+
+  // Deduplicate emails
+  const emailSet = new Set();
+  const emails = [];
+  for (const c of contacts) {
+    for (const e of c.emails) {
+      const ne = normalizeEmail(e);
+      if (!emailSet.has(ne)) { emailSet.add(ne); emails.push(e); }
+    }
+  }
+
+  // Deduplicate phones
+  const phoneSet = new Set();
+  const phones = [];
+  for (const c of contacts) {
+    for (const p of c.phones) {
+      const np = normalizePhone(p);
+      if (!phoneSet.has(np)) { phoneSet.add(np); phones.push(p); }
+    }
+  }
+
+  // First non-empty for single fields
+  const org = contacts.map(c => c.org).find(v => v) || '';
+  const title = contacts.map(c => c.title).find(v => v) || '';
+  const birthday = contacts.map(c => c.birthday).find(v => v) || '';
+  const url = contacts.map(c => c.url).find(v => v) || '';
+  const photo = contacts.map(c => c.photo).find(v => v) || '';
+
+  // Merge notes
+  const noteSet = new Set();
+  const notes = contacts.map(c => c.notes).filter(n => n && !noteSet.has(n) && noteSet.add(n));
+
+  return {
+    name: bestName,
+    emails,
+    phones,
+    org,
+    title,
+    birthday,
+    url,
+    notes: notes.join('; '),
+    photo,
+  };
+}
+
+// ── Export: vCard ─────────────────────────────────────────────────
+function contactToVCard(c) {
+  let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
+  vcard += `FN:${c.name}\n`;
+  const nameParts = c.name.split(/\s+/);
+  const last = nameParts.length > 1 ? nameParts.pop() : '';
+  const first = nameParts.join(' ');
+  vcard += `N:${last};${first};;;\n`;
+  for (const e of c.emails) vcard += `EMAIL:${e}\n`;
+  for (const p of c.phones) vcard += `TEL:${p}\n`;
+  if (c.org) vcard += `ORG:${c.org}\n`;
+  if (c.title) vcard += `TITLE:${c.title}\n`;
+  if (c.birthday) vcard += `BDAY:${c.birthday}\n`;
+  if (c.url) vcard += `URL:${c.url}\n`;
+  if (c.notes) vcard += `NOTE:${c.notes}\n`;
+  vcard += 'END:VCARD\n';
+  return vcard;
+}
+
+function generateVCardExport() {
+  const merged = [];
+  for (const g of state.groups) {
+    if (g.status === 'approved' && g.merged) merged.push(g.merged);
+    else if (g.status === 'skipped') g.contacts.forEach(c => merged.push(c));
+    else if (g.status === 'pending') g.contacts.forEach(c => merged.push(c));
+  }
+  for (const c of state.uniqueContacts) merged.push(c);
+  return { contacts: merged, text: merged.map(contactToVCard).join('\n') };
+}
+
+// ── Export: CSV ───────────────────────────────────────────────────
+function generateCSV() {
+  const { contacts } = generateVCardExport();
+  const rows = [['Name','Email','Phone','Organization','Title','Birthday','URL','Notes']];
+  for (const c of contacts) {
+    rows.push([
+      c.name || '',
+      (c.emails || []).join('; '),
+      (c.phones || []).join('; '),
+      c.org || '',
+      c.title || '',
+      c.birthday || '',
+      c.url || '',
+      c.notes || '',
+    ]);
+  }
+  return rows.map(r => r.map(v => `"${(v+'').replace(/"/g,'""')}"`).join(',')).join('\n');
+}
+
+// ── Export: JSON ──────────────────────────────────────────────────
+function generateJSON() {
+  const { contacts } = generateVCardExport();
+  return JSON.stringify(contacts.map(c => ({
+    name: c.name,
+    emails: c.emails || [],
+    phones: c.phones || [],
+    organization: c.org || '',
+    title: c.title || '',
+    birthday: c.birthday || '',
+    url: c.url || '',
+    notes: c.notes || '',
+  })), null, 2);
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  UI LAYER
+// ─────────────────────────────────────────────────────────────────
+
+// ── File Upload ──────────────────────────────────────────────────
+function setupDropZone(zoneId, inputId, infoId, fileNum) {
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  const info = document.getElementById(infoId);
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file, zone, info, fileNum);
+  });
+  input.addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0], zone, info, fileNum);
+  });
+}
+
+function handleFile(file, zone, info, fileNum) {
+  if (!file.name.match(/\.(vcf|vcard)$/i)) {
+    showToast('Please select a .vcf file', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const contacts = parseVCards(e.target.result);
+    if (fileNum === 1) state.file1Contacts = contacts;
+    else state.file2Contacts = contacts;
+    zone.classList.add('loaded');
+    info.classList.remove('hidden');
+    info.textContent = `${contacts.length} contacts loaded`;
+    zone.querySelector('.drop-zone-title').textContent = file.name;
+    zone.querySelector('.drop-zone-sub').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+    checkReady();
+  };
+  reader.readAsText(file);
+}
+
+function checkReady() {
+  document.getElementById('btnFindDupes').disabled =
+    !(state.file1Contacts.length || state.file2Contacts.length);
+}
+
+// ── Find Duplicates ──────────────────────────────────────────────
+function findDuplicates() {
+  state.threshold = parseInt(document.getElementById('thresholdSlider').value);
+  state.autoMerge = document.getElementById('autoMerge').checked;
+
+  state.allContacts = [...state.file1Contacts.map((c, i) => ({...c, _source: 'File 1', _sourceIdx: i})),
+                       ...state.file2Contacts.map((c, i) => ({...c, _source: 'File 2', _sourceIdx: i}))];
+
+  showProgress('Analyzing contacts...', 'Building match index');
+
+  setTimeout(() => {
+    const { groups, unique } = findDuplicateGroups(state.allContacts, state.threshold);
+
+    // Auto-merge high confidence if enabled
+    if (state.autoMerge) {
+      for (const g of groups) {
+        if (g.confidence >= 95 && g.warnings.length === 0) {
+          g.merged = mergeContacts(g.contacts);
+          g.status = 'approved';
+        }
+      }
+    }
+
+    state.groups = groups;
+    state.uniqueContacts = unique;
+    state.filteredGroups = groups;
+    state.currentPage = 0;
+
+    hideProgress();
+
+    if (groups.length === 0) {
+      showToast('No duplicates found at this threshold', 'info');
+      return;
+    }
+
+    const autoCount = groups.filter(g => g.status === 'approved').length;
+    if (autoCount > 0) {
+      showToast(`Auto-merged ${autoCount} high-confidence groups`, 'success');
+    }
+
+    showScreen('screenReview');
+    updateStats();
+    buildConfidenceTabs();
+    renderGroups();
+  }, 100);
+}
+
+// ── Screens ──────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  const isReview = id === 'screenReview';
+  const isResults = id === 'screenResults';
+  document.getElementById('headerStats').classList.toggle('hidden', !isReview && !isResults);
+  document.getElementById('btnUndo').classList.toggle('hidden', !isReview);
+  document.getElementById('btnStartOver').classList.toggle('hidden', id === 'screenUpload');
+}
+
+// ── Stats ────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('statTotal').textContent = state.allContacts.length;
+  document.getElementById('statDupes').textContent = state.groups.length;
+  document.getElementById('statMerged').textContent = state.groups.filter(g => g.status === 'approved').length;
+  updateProgress();
+}
+
+function updateProgress() {
+  const reviewed = state.groups.filter(g => g.status !== 'pending').length;
+  const total = state.groups.length;
+  document.getElementById('progressText').textContent = `${reviewed} / ${total} reviewed`;
+  document.getElementById('progressFill').style.width = total ? `${(reviewed / total) * 100}%` : '0%';
+}
+
+// ── Confidence Tabs ──────────────────────────────────────────────
+function buildConfidenceTabs() {
+  const tiers = [
+    { key: 'all', label: 'All' },
+    { key: '95-100', label: '95-100%', min: 95, max: 100 },
+    { key: '85-94', label: '85-94%', min: 85, max: 94 },
+    { key: '70-84', label: '70-84%', min: 70, max: 84 },
+    { key: '50-69', label: '50-69%', min: 50, max: 69 },
+    { key: 'below', label: '<50%', min: 0, max: 49 },
+  ];
+
+  const container = document.getElementById('confidenceTabs');
+  container.innerHTML = '';
+  for (const tier of tiers) {
+    const count = tier.key === 'all' ? state.groups.length :
+      state.groups.filter(g => g.confidence >= tier.min && g.confidence <= tier.max).length;
+    if (tier.key !== 'all' && count === 0) continue;
+
+    const tab = document.createElement('button');
+    tab.className = `confidence-tab ${tier.key === state.currentTab ? 'active' : ''}`;
+    tab.innerHTML = `${tier.label} <span class="tab-count">${count}</span>`;
+    tab.onclick = () => {
+      state.currentTab = tier.key;
+      state.currentPage = 0;
+      filterGroups();
+      container.querySelectorAll('.confidence-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    };
+    container.appendChild(tab);
+  }
+}
+
+// ── Filter & Render ──────────────────────────────────────────────
+function filterGroups() {
+  state.searchQuery = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = state.groups;
+
+  // Tab filter
+  if (state.currentTab !== 'all') {
+    const ranges = { '95-100': [95,100], '85-94': [85,94], '70-84': [70,84], '50-69': [50,69], 'below': [0,49] };
+    const [min, max] = ranges[state.currentTab] || [0, 100];
+    filtered = filtered.filter(g => g.confidence >= min && g.confidence <= max);
+  }
+
+  // Search filter
+  if (state.searchQuery) {
+    filtered = filtered.filter(g =>
+      g.contacts.some(c =>
+        c.name.toLowerCase().includes(state.searchQuery) ||
+        c.emails.some(e => e.toLowerCase().includes(state.searchQuery)) ||
+        c.phones.some(p => p.includes(state.searchQuery)) ||
+        (c.org && c.org.toLowerCase().includes(state.searchQuery))
+      )
+    );
+  }
+
+  state.filteredGroups = filtered;
+  state.currentPage = 0;
+  renderGroups();
+}
+
+function renderGroups() {
+  const container = document.getElementById('groupList');
+  const start = state.currentPage * state.pageSize;
+  const pageGroups = state.filteredGroups.slice(start, start + state.pageSize);
+
+  if (pageGroups.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">&#x1F50D;</div>
+        <h3>No groups match your filter</h3>
+        <p>Try adjusting the confidence tier or search query</p>
+      </div>`;
+    updatePageNav();
+    return;
+  }
+
+  container.innerHTML = pageGroups.map((g, i) => {
+    const globalIdx = state.groups.indexOf(g);
+    const confClass = g.confidence >= 90 ? 'conf-high' : g.confidence >= 70 ? 'conf-medium' : g.confidence >= 50 ? 'conf-low' : 'conf-very-low';
+    const statusClass = g.status === 'approved' ? 'approved' : g.status === 'skipped' ? 'skipped' : '';
+    const names = g.contacts.map(c => c.name).filter(Boolean);
+    const displayName = names[0] || 'Unknown';
+    const emailCount = new Set(g.contacts.flatMap(c => c.emails.map(normalizeEmail))).size;
+    const phoneCount = new Set(g.contacts.flatMap(c => c.phones.map(normalizePhone))).size;
+
+    const warningsHtml = g.warnings.map(w => `<span class="warning-badge">&#x26A0; ${w}</span>`).join('');
+
+    const contactsHtml = g.contacts.map((c, ci) => {
+      const initials = c.name ? c.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() : '?';
+      const avatarClass = `avatar-${(ci % 3) + 1}`;
+      return `
+        <div class="contact-card">
+          <div class="contact-card-header">
+            <div class="contact-avatar ${avatarClass}">${initials}</div>
+            <div>
+              <div class="contact-name">${esc(c.name || 'No Name')}</div>
+              <div class="contact-source">${esc(c._source || 'Source')}</div>
+            </div>
+          </div>
+          <div class="contact-fields">
+            ${c.emails.map(e => `<div class="contact-field"><span class="field-icon">&#x2709;</span><span class="field-value">${esc(e)}</span></div>`).join('')}
+            ${c.phones.map(p => `<div class="contact-field"><span class="field-icon">&#x260E;</span><span class="field-value">${esc(p)}</span></div>`).join('')}
+            ${c.org ? `<div class="contact-field"><span class="field-icon">&#x1F3E2;</span><span class="field-value">${esc(c.org)}</span></div>` : ''}
+            ${c.title ? `<div class="contact-field"><span class="field-icon">&#x1F4BC;</span><span class="field-value">${esc(c.title)}</span></div>` : ''}
+            ${c.birthday ? `<div class="contact-field"><span class="field-icon">&#x1F382;</span><span class="field-value">${esc(c.birthday)}</span></div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    const colClass = g.contacts.length === 2 ? 'two-col' : g.contacts.length >= 3 ? 'three-col' : '';
+    const factorsHtml = g.factors.map(f => `<span class="match-factor">${esc(f)}</span>`).join('');
+
+    // Merged preview
+    const merged = g.merged || mergeContacts(g.contacts);
+    const mergePreviewHtml = `
+      <div class="merge-preview">
+        <h4>&#x2728; Merged Result</h4>
+        <div class="contact-fields">
+          <div class="contact-field"><span class="field-icon">&#x1F464;</span><span class="field-value highlight">${esc(merged.name)}</span></div>
+          ${merged.emails.map(e => `<div class="contact-field"><span class="field-icon">&#x2709;</span><span class="field-value">${esc(e)}</span></div>`).join('')}
+          ${merged.phones.map(p => `<div class="contact-field"><span class="field-icon">&#x260E;</span><span class="field-value">${esc(p)}</span></div>`).join('')}
+          ${merged.org ? `<div class="contact-field"><span class="field-icon">&#x1F3E2;</span><span class="field-value">${esc(merged.org)}</span></div>` : ''}
+        </div>
+        <div class="match-factors">${factorsHtml}</div>
+      </div>`;
+
+    return `
+      <div class="group-card ${statusClass}" id="group-${globalIdx}">
+        <div class="group-header" onclick="toggleGroup(${globalIdx})">
+          <div class="group-header-left">
+            <div class="group-confidence ${confClass}">${g.confidence}%</div>
+            <div class="group-info">
+              <h3>${esc(displayName)}${names.length > 1 ? ` <span style="color:var(--text-muted);font-weight:400">+ ${names.length - 1} variant${names.length > 2 ? 's' : ''}</span>` : ''}</h3>
+              <div class="group-meta">
+                <span>&#x1F465; ${g.contacts.length} contacts</span>
+                ${emailCount ? `<span>&#x2709; ${emailCount} emails</span>` : ''}
+                ${phoneCount ? `<span>&#x260E; ${phoneCount} phones</span>` : ''}
+                ${g.status === 'approved' ? '<span style="color:var(--success)">&#x2714; Merged</span>' : ''}
+                ${g.status === 'skipped' ? '<span style="color:var(--text-muted)">&#x2716; Skipped</span>' : ''}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="group-warnings">${warningsHtml}</div>
+            <div class="group-actions" onclick="event.stopPropagation()">
+              <button class="btn btn-sm btn-success" onclick="approveGroup(${globalIdx})" ${g.status === 'approved' ? 'disabled' : ''}>&#x2714; Merge</button>
+              <button class="btn btn-sm" onclick="editGroup(${globalIdx})">&#x270F; Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="skipGroup(${globalIdx})" ${g.status === 'skipped' ? 'disabled' : ''}>&#x2716; Skip</button>
+            </div>
+          </div>
+        </div>
+        <div class="group-body">
+          <div class="contacts-comparison ${colClass}">${contactsHtml}</div>
+          ${mergePreviewHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  updatePageNav();
+}
+
+function toggleGroup(idx) {
+  const el = document.getElementById(`group-${idx}`);
+  if (el) el.classList.toggle('expanded');
+}
+
+function approveGroup(idx) {
+  const g = state.groups[idx];
+  state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
+  g.merged = g.merged || mergeContacts(g.contacts);
+  g.status = 'approved';
+  updateGroupCard(idx);
+  updateStats();
+  showToast(`Merged: ${g.merged.name}`, 'success');
+}
+
+function skipGroup(idx) {
+  const g = state.groups[idx];
+  state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
+  g.status = 'skipped';
+  updateGroupCard(idx);
+  updateStats();
+  showToast('Group skipped', 'info');
+}
+
+function updateGroupCard(idx) {
+  const el = document.getElementById(`group-${idx}`);
+  if (!el) return;
+  const g = state.groups[idx];
+  el.className = `group-card ${g.status === 'approved' ? 'approved' : g.status === 'skipped' ? 'skipped' : ''}`;
+  // Update buttons
+  const mergeBtn = el.querySelector('.btn-success');
+  const skipBtn = el.querySelector('.btn-danger');
+  if (mergeBtn) mergeBtn.disabled = g.status === 'approved';
+  if (skipBtn) skipBtn.disabled = g.status === 'skipped';
+  // Update meta
+  const meta = el.querySelector('.group-meta');
+  if (meta) {
+    // Remove old status spans
+    meta.querySelectorAll('[style*="color:var(--success)"], [style*="color:var(--text-muted)"]').forEach(s => {
+      if (s.textContent.includes('Merged') || s.textContent.includes('Skipped')) s.remove();
+    });
+    if (g.status === 'approved') {
+      const s = document.createElement('span');
+      s.style.color = 'var(--success)';
+      s.innerHTML = '&#x2714; Merged';
+      meta.appendChild(s);
+    } else if (g.status === 'skipped') {
+      const s = document.createElement('span');
+      s.style.color = 'var(--text-muted)';
+      s.innerHTML = '&#x2716; Skipped';
+      meta.appendChild(s);
+    }
+  }
+}
+
+function approveAllVisible() {
+  let count = 0;
+  for (const g of state.filteredGroups) {
+    if (g.status === 'pending') {
+      const idx = state.groups.indexOf(g);
+      state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
+      g.merged = mergeContacts(g.contacts);
+      g.status = 'approved';
+      count++;
+    }
+  }
+  if (count > 0) {
+    renderGroups();
+    updateStats();
+    showToast(`Merged ${count} groups`, 'success');
+  }
+}
+
+function undoLast() {
+  if (state.undoStack.length === 0) {
+    showToast('Nothing to undo', 'info');
+    return;
+  }
+  const action = state.undoStack.pop();
+  const g = state.groups[action.idx];
+  g.status = action.prevStatus;
+  g.merged = action.prevMerged;
+  updateGroupCard(action.idx);
+  updateStats();
+  showToast('Undone', 'info');
+}
+
+// ── Edit Modal ───────────────────────────────────────────────────
+function editGroup(idx) {
+  const g = state.groups[idx];
+  const merged = g.merged || mergeContacts(g.contacts);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Edit Merged Contact</h2>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" id="editName" value="${esc(merged.name)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emails</label>
+          <div class="form-input-multi" id="editEmails">
+            ${merged.emails.map((e, i) => `
+              <div class="form-input-row">
+                <input class="form-input edit-email" value="${esc(e)}">
+                <button class="btn btn-sm btn-icon" onclick="this.parentElement.remove()">&times;</button>
+              </div>`).join('')}
+          </div>
+          <button class="btn btn-sm btn-ghost" style="margin-top:6px" onclick="addEditField('editEmails', 'edit-email')">+ Add Email</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phones</label>
+          <div class="form-input-multi" id="editPhones">
+            ${merged.phones.map(p => `
+              <div class="form-input-row">
+                <input class="form-input edit-phone" value="${esc(p)}">
+                <button class="btn btn-sm btn-icon" onclick="this.parentElement.remove()">&times;</button>
+              </div>`).join('')}
+          </div>
+          <button class="btn btn-sm btn-ghost" style="margin-top:6px" onclick="addEditField('editPhones', 'edit-phone')">+ Add Phone</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Organization</label>
+          <input class="form-input" id="editOrg" value="${esc(merged.org)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" id="editTitle" value="${esc(merged.title)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input" id="editNotes">${esc(merged.notes)}</textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEdit(${idx})">Save & Merge</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+function addEditField(containerId, className) {
+  const container = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'form-input-row';
+  row.innerHTML = `<input class="form-input ${className}" value=""><button class="btn btn-sm btn-icon" onclick="this.parentElement.remove()">&times;</button>`;
+  container.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function saveEdit(idx) {
+  const g = state.groups[idx];
+  state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
+
+  g.merged = {
+    name: document.getElementById('editName').value,
+    emails: [...document.querySelectorAll('.edit-email')].map(e => e.value).filter(Boolean),
+    phones: [...document.querySelectorAll('.edit-phone')].map(p => p.value).filter(Boolean),
+    org: document.getElementById('editOrg').value,
+    title: document.getElementById('editTitle').value,
+    birthday: (g.merged || mergeContacts(g.contacts)).birthday,
+    url: (g.merged || mergeContacts(g.contacts)).url,
+    notes: document.getElementById('editNotes').value,
+    photo: (g.merged || mergeContacts(g.contacts)).photo,
+  };
+  g.status = 'approved';
+
+  document.querySelector('.modal-overlay').remove();
+  updateGroupCard(idx);
+  updateStats();
+  renderGroups();
+  showToast(`Saved: ${g.merged.name}`, 'success');
+}
+
+// ── Export ────────────────────────────────────────────────────────
+function showExport() {
+  const approved = state.groups.filter(g => g.status === 'approved').length;
+  const pending = state.groups.filter(g => g.status === 'pending').length;
+  const { contacts } = generateVCardExport();
+
+  if (pending > 0) {
+    if (!confirm(`${pending} groups are still pending review. Export anyway?`)) return;
+  }
+
+  // Build results
+  const statsHtml = `
+    <div class="result-stat">
+      <div class="result-stat-value">${state.allContacts.length}</div>
+      <div class="result-stat-label">Total Input</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-stat-value" style="color:var(--success)">${approved}</div>
+      <div class="result-stat-label">Groups Merged</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-stat-value" style="color:var(--accent-light)">${contacts.length}</div>
+      <div class="result-stat-label">Final Contacts</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-stat-value" style="color:var(--warning)">${state.allContacts.length - contacts.length}</div>
+      <div class="result-stat-label">Duplicates Removed</div>
+    </div>`;
+
+  document.getElementById('resultsStats').innerHTML = statsHtml;
+  document.getElementById('resultsMessage').textContent =
+    `Reduced ${state.allContacts.length} contacts down to ${contacts.length} by merging ${approved} duplicate groups.`;
+
+  showScreen('screenResults');
+}
+
+function downloadVCard() {
+  const { text } = generateVCardExport();
+  downloadFile('dedupe_pro_contacts.vcf', text, 'text/vcard');
+}
+
+function downloadCSV() {
+  downloadFile('dedupe_pro_contacts.csv', generateCSV(), 'text/csv');
+}
+
+function downloadJSON() {
+  downloadFile('dedupe_pro_contacts.json', generateJSON(), 'application/json');
+}
+
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Downloaded ${name}`, 'success');
+}
+
+// ── Pagination ───────────────────────────────────────────────────
+function changePage(delta) {
+  state.currentPage += delta;
+  renderGroups();
+  document.getElementById('reviewBody').scrollTop = 0;
+}
+
+function updatePageNav() {
+  const total = Math.ceil(state.filteredGroups.length / state.pageSize);
+  const page = state.currentPage + 1;
+  document.getElementById('pageInfo').textContent = total > 1 ? `Page ${page} of ${total}` : `${state.filteredGroups.length} groups`;
+  document.getElementById('btnPrevPage').disabled = state.currentPage <= 0;
+  document.getElementById('btnNextPage').disabled = state.currentPage >= total - 1;
+}
+
+// ── Progress Overlay ─────────────────────────────────────────────
+function showProgress(title, sub) {
+  const el = document.createElement('div');
+  el.className = 'progress-overlay';
+  el.id = 'progressOverlay';
+  el.innerHTML = `
+    <div class="progress-card">
+      <h3>${title}</h3>
+      <p>${sub}</p>
+      <div class="progress-bar"><div class="progress-fill" style="width:60%;animation:pulse 1.5s infinite"></div></div>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+function hideProgress() {
+  const el = document.getElementById('progressOverlay');
+  if (el) el.remove();
+}
+
+// ── Toast ────────────────────────────────────────────────────────
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '&#x2714;', error: '&#x2718;', info: '&#x2139;' };
+  toast.innerHTML = `<span>${icons[type] || ''}</span> ${message}`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// ── Start Over ───────────────────────────────────────────────────
+function startOver() {
+  state.file1Contacts = [];
+  state.file2Contacts = [];
+  state.allContacts = [];
+  state.groups = [];
+  state.filteredGroups = [];
+  state.uniqueContacts = [];
+  state.undoStack = [];
+  state.currentTab = 'all';
+  state.currentPage = 0;
+
+  // Reset drop zones
+  for (const id of ['dropZone1', 'dropZone2']) {
+    const el = document.getElementById(id);
+    el.classList.remove('loaded');
+  }
+  document.getElementById('fileInfo1').classList.add('hidden');
+  document.getElementById('fileInfo2').classList.add('hidden');
+  document.getElementById('fileInput1').value = '';
+  document.getElementById('fileInput2').value = '';
+  document.querySelector('#dropZone1 .drop-zone-title').textContent = 'First Contact File';
+  document.querySelector('#dropZone1 .drop-zone-sub').textContent = 'Drop .vcf file or click to browse';
+  document.querySelector('#dropZone2 .drop-zone-title').textContent = 'Second Contact File';
+  document.querySelector('#dropZone2 .drop-zone-sub').textContent = 'Drop .vcf file or click to browse';
+  document.getElementById('btnFindDupes').disabled = true;
+
+  showScreen('screenUpload');
+}
+
+// ── Keyboard Shortcuts ───────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'z') { e.preventDefault(); undoLast(); }
+    if (e.key === 'e') { e.preventDefault(); showExport(); }
+    return;
+  }
+  if (e.key === 'a') approveAllVisible();
+});
+
+// ── Helpers ──────────────────────────────────────────────────────
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+setupDropZone('dropZone1', 'fileInput1', 'fileInfo1', 1);
+setupDropZone('dropZone2', 'fileInput2', 'fileInfo2', 2);
+</script>
+</body>
+</html>

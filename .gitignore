@@ -1,0 +1,7 @@
+.vercel
+.DS_Store
+.claude/settings.local.json
+.claude/launch.json
+# Contains machine PINs, account names and network details — never commit or deploy
+Phyllis_Contact_Dedup_Rebuild_Handoff.md
+__pycache__/

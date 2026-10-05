@@ -1,0 +1,16 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Test Person One
+N:One;Test;;;
+EMAIL:test1@example.com
+NOTE:First paragraph\n\nSecond paragraph with comma\, and more.
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Test Person Two
+N:Two;Test;;;
+EMAIL:test2@example.com
+TEL:+1-650-555-0100
+NOTE:Note A with\; semicolon
+NOTE:Note B second property
+END:VCARD

@@ -435,7 +435,7 @@ textarea.form-input { resize: vertical; min-height: 140px; font-size: 0.95em; li
               <div class="drop-zone-title" id="dropTitle1">Main contact file</div>
               <div class="drop-zone-sub" id="dropSub1">Drop an Outlook export (.csv) or a .vcf here, or click to choose</div>
               <div class="drop-zone-info hidden" id="fileInfo1"></div>
-              <input type="file" id="fileInput1" accept=".vcf,.vcard,.csv,.txt" style="display:none">
+              <input type="file" id="fileInput1" accept=".csv,.vcf,.vcard,.txt,.tsv,.xlsx,.xls" style="display:none">
               <button class="btn btn-sm btn-ghost btn-clear hidden" id="clear1" onclick="event.stopPropagation(); clearFile(1)">&times; Remove</button>
             </div>
             <div class="drop-zone-versus">+</div>
@@ -444,7 +444,7 @@ textarea.form-input { resize: vertical; min-height: 140px; font-size: 0.95em; li
               <div class="drop-zone-title" id="dropTitle2">Second file (optional)</div>
               <div class="drop-zone-sub" id="dropSub2">e.g. your iPhone export — to compare the two lists</div>
               <div class="drop-zone-info hidden" id="fileInfo2"></div>
-              <input type="file" id="fileInput2" accept=".vcf,.vcard,.csv,.txt" style="display:none">
+              <input type="file" id="fileInput2" accept=".csv,.vcf,.vcard,.txt,.tsv,.xlsx,.xls" style="display:none">
               <button class="btn btn-sm btn-ghost btn-clear hidden" id="clear2" onclick="event.stopPropagation(); clearFile(2)">&times; Remove</button>
             </div>
           </div>
@@ -1315,11 +1315,34 @@ function decodeCp1252(bytes) {
   return out;
 }
 
-/** Bytes → text. UTF-8 when the bytes are valid UTF-8, else Windows-1252 (classic Outlook's ANSI export). */
+/** Bytes → text. UTF-16 (Excel "Unicode Text", some Outlook builds) by BOM or zero-byte pattern; then UTF-8 when
+ *  the bytes are valid UTF-8; else Windows-1252 (classic Outlook's ANSI export). */
 function decodeContactFile(buf) {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  const b0 = bytes[0], b1 = bytes[1];
+  if (b0 === 0xFF && b1 === 0xFE) return { text: new TextDecoder('utf-16le').decode(bytes.subarray(2)), encoding: 'utf-16le' };
+  if (b0 === 0xFE && b1 === 0xFF) return { text: new TextDecoder('utf-16be').decode(bytes.subarray(2)), encoding: 'utf-16be' };
+  if (bytes.length >= 8) {
+    let oddZeros = 0, evenZeros = 0;
+    const n = Math.min(bytes.length & ~1, 2000);
+    for (let i = 0; i < n; i += 2) { if (bytes[i] === 0) evenZeros++; if (bytes[i + 1] === 0) oddZeros++; }
+    if (oddZeros > n / 4 && evenZeros < n / 40) return { text: new TextDecoder('utf-16le').decode(bytes), encoding: 'utf-16le' };
+    if (evenZeros > n / 4 && oddZeros < n / 40) return { text: new TextDecoder('utf-16be').decode(bytes), encoding: 'utf-16be' };
+  }
   try { return { text: new TextDecoder('utf-8', { fatal: true }).decode(bytes), encoding: 'utf-8' }; }
   catch (e) { return { text: decodeCp1252(bytes), encoding: 'windows-1252' }; }
+}
+
+/** What kind of file is this, judged by its first bytes (not its name). */
+function sniffFileKind(buf, name) {
+  const b = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  const ext = (/\.([a-z0-9]+)$/i.exec(name || '') || [])[1]?.toLowerCase() || '';
+  if (b[0] === 0x21 && b[1] === 0x42 && b[2] === 0x44 && b[3] === 0x4E) return 'pst';           // "!BDN"
+  if (ext === 'pst' || ext === 'ost') return 'pst';
+  if (ext === 'olm') return 'olm';
+  if (b[0] === 0x50 && b[1] === 0x4B && b[2] === 0x03 && b[3] === 0x04) return ext === 'olm' ? 'olm' : (ext === 'zip' ? 'zip' : 'xlsx');
+  if (b[0] === 0xD0 && b[1] === 0xCF && b[2] === 0x11 && b[3] === 0xE0) return ext === 'msg' ? 'msg' : 'xls';
+  return 'text';
 }
 
 /** RFC 4180 parser: quoted fields, "" escapes, commas and line breaks inside quotes. */
@@ -1358,30 +1381,171 @@ function detectDelimiter(text) {
 
 function looksLikeVCard(text) { return /^\s*BEGIN:VCARD/im.test(text.slice(0, 4096)); }
 
-/** True when a header row is an Outlook-style contacts export. */
-function isOutlookHeader(header) {
-  const h = new Set(header.map(x => x.trim().toLowerCase()));
-  return (h.has('first name') || h.has('last name')) && [...h].some(x => /^e-mail( \d)? address$/.test(x) || /phone$/.test(x) || x === 'notes');
+// ── Column recognition ───────────────────────────────────────────
+//  Any contacts spreadsheet is mapped onto Outlook's own column names: exact Outlook names first, then
+//  aliases used by new Outlook / Outlook.com, Google Contacts, Apple/other exporters and hand-made sheets.
+//  Numbered "slot" columns (Google's "Phone 1 - Value", "E-mail 2 - Value", "Address 1 - City") become
+//  real phone/email/address fields. Every other column is kept as an extra field — nothing is dropped.
+function normHeader(h) {
+  return String(h || '').replace(/^﻿/, '').trim().toLowerCase()
+    .replace(/^"+|"+$/g, '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ')
+    .replace(/\be ?mail\b/g, 'e-mail').replace(/[:.]$/, '').trim();
+}
+const OUTLOOK_COL_SET = new Set(OUTLOOK_DEFAULT_HEADER.map(normHeader));
+const OUTLOOK_CANON = new Map(OUTLOOK_DEFAULT_HEADER.map(h => [normHeader(h), h]));
+const FULLNAME_COL = '\u0001Full Name';
+const HEADER_ALIASES = (() => {
+  const a = {
+    'First Name': ['given name', 'firstname', 'first', 'forename', 'first name(s)'],
+    'Middle Name': ['additional name', 'middle', 'middlename', 'middle initial'],
+    'Last Name': ['family name', 'surname', 'lastname', 'last'],
+    'Title': ['name prefix', 'prefix', 'salutation'],
+    'Suffix': ['name suffix'],
+    [FULLNAME_COL]: ['name', 'full name', 'fullname', 'display name', 'contact name', 'contact', 'file as', 'e-mail display name only'],
+    'Company': ['organization', 'organisation', 'organization name', 'organization 1 - name', 'company name', 'business', 'employer'],
+    'Job Title': ['organization title', 'organization 1 - title', 'position', 'role', 'job'],
+    'Department': ['organization department', 'organization 1 - department', 'dept'],
+    'E-mail Address': ['e-mail', 'e-mail 1', 'e-mail1', 'e-mail 1 address', 'e-mail address 1', 'primary e-mail', 'e-mail (primary)', 'personal e-mail', 'home e-mail', 'e-mail addresses'],
+    'E-mail 2 Address': ['e-mail 2', 'e-mail2', 'e-mail address 2', 'work e-mail', 'business e-mail', 'secondary e-mail'],
+    'E-mail 3 Address': ['e-mail 3', 'e-mail3', 'e-mail address 3', 'other e-mail'],
+    'Mobile Phone': ['mobile', 'cell', 'cell phone', 'cellphone', 'mobile number', 'iphone', 'mobile phone number'],
+    'Home Phone': ['home', 'home number', 'home telephone', 'phone (home)'],
+    'Business Phone': ['work phone', 'office phone', 'work', 'work number', 'business telephone', 'phone (work)'],
+    'Primary Phone': ['phone', 'telephone', 'phone number', 'tel', 'main phone', 'main', 'phone 1'],
+    'Other Phone': ['phone 2', 'other', 'alternate phone', 'phone (other)'],
+    'Business Fax': ['fax', 'work fax', 'fax number'],
+    'Home Street': ['address', 'street', 'street address', 'home address', 'mailing address', 'address 1'],
+    'Home City': ['city', 'town'],
+    'Home State': ['state', 'province', 'region', 'state/province'],
+    'Home Postal Code': ['zip', 'zip code', 'zipcode', 'postal code', 'postcode', 'postal'],
+    'Home Country/Region': ['country', 'country/region', 'home country'],
+    'Business Street': ['work address', 'business address', 'office address'],
+    'Web Page': ['website', 'web site', 'url', 'homepage', 'home page', 'web', 'personal web page'],
+    'Birthday': ['birth date', 'birthdate', 'date of birth', 'dob', 'bday'],
+    'Notes': ['note', 'comments', 'comment', 'memo', 'remarks', 'description'],
+    'Categories': ['labels', 'group membership', 'groups', 'tags', 'category'],
+  };
+  const m = new Map();
+  for (const [canon, list] of Object.entries(a)) for (const x of list) if (!m.has(normHeader(x))) m.set(normHeader(x), canon);
+  return m;
+})();
+const SLOT_RE = /^(e-mail|phone|address|website|im|instant messenger|relation|event|custom field|external id|organization)\s*(\d+)\s*-\s*(.+)$/;
+
+/** Map a header row. Returns { names: canonical-or-original per column, slots, native, recognised }. */
+function mapHeader(header) {
+  const names = new Array(header.length).fill(null);
+  const taken = new Set();
+  const slots = [];
+  let aliasUsed = false, recognised = 0;
+  header.forEach((h, i) => {
+    const k = normHeader(h);
+    if (!k) { names[i] = `\u0002col${i + 1}`; return; }
+    const exact = OUTLOOK_CANON.get(k);
+    if (exact && !taken.has(exact)) { names[i] = exact; taken.add(exact); recognised++; }
+  });
+  header.forEach((h, i) => {
+    if (names[i]) return;
+    const k = normHeader(h);
+    const alias = HEADER_ALIASES.get(k);
+    if (alias && !taken.has(alias)) { names[i] = alias; taken.add(alias); aliasUsed = true; recognised++; return; }
+    const sm = SLOT_RE.exec(k);
+    if (sm) { slots.push({ i, kind: sm[1], n: +sm[2], field: sm[3].trim() }); names[i] = `\u0003slot${i}`; recognised++; return; }
+    names[i] = String(h).trim() || `\u0002col${i + 1}`;
+  });
+  const native = !aliasUsed && !slots.length && taken.size >= 5 && (taken.has('First Name') || taken.has('Last Name'));
+  return { names, slots, native, recognised, taken };
+}
+
+/** Does this header row describe contacts at all? (any name, email or phone column) */
+function headerLooksLikeContacts(m) {
+  const t = m.taken;
+  return t.has('First Name') || t.has('Last Name') || t.has(FULLNAME_COL) || t.has('Company') ||
+    [...t].some(x => /E-mail|Phone|Mobile/.test(x)) || m.slots.some(s => s.kind === 'e-mail' || s.kind === 'phone');
+}
+
+/** vCard lines for numbered slot columns (Google-style "Phone 1 - Label" / "Phone 1 - Value"). */
+function slotLines(slots, row) {
+  const groups = new Map();
+  for (const s of slots) {
+    const key = s.kind + '#' + s.n;
+    if (!groups.has(key)) groups.set(key, { kind: s.kind, n: s.n, f: {} });
+    groups.get(key).f[s.field.toLowerCase()] = (row[s.i] ?? '').trim();
+  }
+  const E = escapeVCardValue, out = [];
+  const typeOf = l => {
+    l = (l || '').toLowerCase().replace(/^\*\s*/, '');
+    if (/fax/.test(l)) return /home/.test(l) ? 'HOME,FAX' : 'WORK,FAX';
+    if (/mobile|cell|iphone/.test(l)) return 'CELL,VOICE';
+    if (/pager/.test(l)) return 'PAGER';
+    if (/work|business|office/.test(l)) return 'WORK,VOICE';
+    if (/home/.test(l)) return 'HOME,VOICE';
+    if (/main/.test(l)) return 'MAIN,VOICE';
+    return 'VOICE';
+  };
+  for (const g of groups.values()) {
+    const label = g.f.label || g.f.type || '';
+    const values = (g.f.value || '').split(/\s*:::\s*/).map(v => v.trim()).filter(Boolean);
+    if (g.kind === 'e-mail') for (const v of values) out.push('EMAIL;TYPE=INTERNET:' + E(v.replace(/\s*\n\s*/g, ' ')));
+    else if (g.kind === 'phone') for (const v of values) out.push(`TEL;TYPE=${typeOf(label)}:` + E(v.replace(/\s*\n\s*/g, ' ')));
+    else if (g.kind === 'website') for (const v of values) out.push('URL:' + v.replace(/\s*\n\s*/g, ' '));
+    else if (g.kind === 'address') {
+      const street = g.f.street || g.f['street address'] || '';
+      const parts = [g.f['po box'] || '', g.f['extended address'] || '', street, g.f.city || '', g.f.region || g.f.state || '', g.f['postal code'] || g.f.zip || '', g.f.country || ''];
+      const formatted = g.f.formatted || '';
+      const t = /work|business/i.test(label) ? 'TYPE=WORK:' : /home/i.test(label) ? 'TYPE=HOME:' : '';
+      if (parts.some(Boolean)) out.push('ADR;' + (t || ':').replace(/^:$/, '').replace(/^(TYPE=[A-Z]+):$/, '$1:') + parts.map(E).join(';'));
+      else if (formatted) out.push('ADR;' + (t || ':').replace(/^:$/, '').replace(/^(TYPE=[A-Z]+):$/, '$1:') + ';;' + E(formatted) + ';;;;');
+    } else {
+      for (const [k, v] of Object.entries(g.f)) if (v) out.push(`X-SLOT-${g.kind.toUpperCase().replace(/[^A-Z0-9]+/g, '-')}-${g.n}-${k.toUpperCase().replace(/[^A-Z0-9]+/g, '-')}:` + E(v));
+    }
+  }
+  return out.map(l => l.replace(/^ADR;:/, 'ADR:'));
 }
 
 /**
- * Parse a contact file of either format. Returns { format, contacts, header?, delimiter? }.
+ * Parse a contact file of either format. Returns { format, contacts, header?, delimiter?, mapping? }.
  * Throws with a plain-English message when the file isn't recognised.
  */
 function parseContactFile(text, label) {
   if (looksLikeVCard(text)) return { format: 'vcf', contacts: parseVCards(text, label) };
-  const delimiter = detectDelimiter(text);
-  const rows = parseCSV(text, delimiter);
-  if (!rows.length) throw new Error('The file is empty');
-  const header = rows[0].map(h => h.trim());
-  if (!isOutlookHeader(header)) throw new Error('This CSV doesn\'t look like an Outlook contacts export (no "First Name" / "Last Name" / "E-mail Address" columns). In Outlook use File → Open & Export → Import/Export → Export to a file → Comma Separated Values → Contacts.');
-  const dataRows = rows.slice(1).filter(r => r.some(v => v.trim() !== ''));
-  return { format: 'csv', header, delimiter, contacts: parseOutlookRows(header, dataRows, label) };
+  let body = text.replace(/^﻿/, '');
+  if (/^sep=.\r?\n/i.test(body)) body = body.replace(/^sep=.\r?\n/i, '');   // Excel's "sep=," hint line
+  const delimiter = detectDelimiter(body);
+  return parseContactRows(parseCSV(body, delimiter), label, delimiter);
 }
 
-function parseOutlookRows(header, rows, label) {
+/** Shared by CSV text and spreadsheet (xlsx) input: rows[0..] are arrays of cell strings. */
+function parseContactRows(rows, label, delimiter) {
+  rows = rows.map(r => r.map(v => (v == null ? '' : String(v))));
+  if (!rows.length) throw new Error('The file is empty');
+  // The header is normally the first row, but some exports put a title line above it.
+  let h = 0, m = mapHeader(rows[0]);
+  for (let k = 1; k < Math.min(rows.length, 6) && !headerLooksLikeContacts(m); k++) {
+    const mk = mapHeader(rows[k]);
+    if (headerLooksLikeContacts(mk)) { h = k; m = mk; }
+  }
+  if (!headerLooksLikeContacts(m)) {
+    const cols = rows[0].slice(0, 8).map(x => `"${String(x).slice(0, 30)}"`).join(', ');
+    throw new Error(`Couldn't find name, email or phone columns in this file. Its first columns are: ${cols}. Export from Outlook with File → Open & Export → Import/Export → Export to a file → Comma Separated Values → Contacts.`);
+  }
+  const header = rows[h].map(x => String(x).trim());
+  const dataRows = rows.slice(h + 1).filter(r => r.some(v => v.trim() !== ''));
+  const contacts = parseOutlookRows(header, dataRows, label, m);
+  return { format: 'csv', header, delimiter: delimiter || ',', contacts, mapping: {
+    native: m.native, columns: header.length, recognised: m.recognised,
+    mapped: header.map((x, i) => [x, m.names[i]]).filter(([x, c]) => c && !c.startsWith('\u0002') && x !== c && !c.startsWith('\u0003')).map(([x, c]) => `${x} → ${c.replace(FULLNAME_COL, 'Name')}`),
+    slotColumns: m.slots.length,
+    extras: header.filter((x, i) => m.names[i] === x && !OUTLOOK_CANON.has(normHeader(x))),
+    hasEmail: [...m.taken].some(x => /E-mail/.test(x)) || m.slots.some(s => s.kind === 'e-mail'),
+    hasPhone: [...m.taken].some(x => /Phone|Mobile/.test(x)) || m.slots.some(s => s.kind === 'phone'),
+    hasNotes: m.taken.has('Notes'),
+  } };
+}
+
+function parseOutlookRows(header, rows, label, mapping) {
+  const m = mapping || mapHeader(header);
   const idx = new Map();
-  header.forEach((h, i) => { const k = h.trim().toLowerCase(); if (!idx.has(k)) idx.set(k, i); });
+  m.names.forEach((h, i) => { const k = h.toLowerCase(); if (!idx.has(k)) idx.set(k, i); });
   const handled = new Set([...OL_NAME_COLS, 'Company', 'Job Title', 'Web Page', 'Birthday', 'Anniversary', 'Categories', 'Notes', 'Initials',
     ...OL_PHONES.map(p => p[0]), ...OL_EMAILS.flat(),
     ...OL_ADDR_BLOCKS.flatMap(([b]) => { const a = olAddrCols(b); return [...a.street, a.city, a.state, a.postal, a.country, a.pobox]; })].map(s => s.toLowerCase()));
@@ -1396,9 +1560,13 @@ function parseOutlookRows(header, rows, label) {
     const [title, first, middle, last, suffix] = OL_NAME_COLS.map(val);
     const company = val('Company');
     const firstEmail = OL_EMAILS.map(([a]) => val(a)).find(Boolean) || '';
-    const fn = [title, first, middle, last, suffix].filter(Boolean).join(' ') || company || val('E-mail Display Name') || firstEmail;
+    const full = val(FULLNAME_COL);
+    const fn = [title, first, middle, last, suffix].filter(Boolean).join(' ') || full || company || val('E-mail Display Name') || firstEmail;
     if (fn) L.push('FN:' + E(fn));
-    L.push('N:' + [last, first, middle, title, suffix].map(E).join(';'));
+    if (title || first || middle || last || suffix) L.push('N:' + [last, first, middle, title, suffix].map(E).join(';'));
+    else if (full && full.includes(',')) { const [l, ...r] = full.split(','); L.push('N:' + [l.trim(), r.join(',').trim(), '', '', ''].map(E).join(';')); }
+    else if (full) { const t = full.trim().split(/\s+/); L.push('N:' + (t.length > 1 ? [t.pop(), t.join(' '), '', '', ''] : ['', t[0], '', '', '']).map(E).join(';')); }
+    else L.push('N:;;;;');
     if (company) L.push(`ORG;${col('Company')}:` + E(company));
     if (val('Job Title')) L.push(`TITLE;${col('Job Title')}:` + E(val('Job Title')));
     for (const [a, t, d] of OL_EMAILS) {
@@ -1424,20 +1592,23 @@ function parseOutlookRows(header, rows, label) {
     const ini = val('Initials').replace(/[^A-Za-z]/g, '').toUpperCase();
     const auto = [first, middle, last].filter(Boolean).map(w => w[0]).join('').toUpperCase();
     if (ini && ini !== auto) L.push(`X-OUTLOOK-INITIALS;${col('Initials')}:` + E(val('Initials')));
-    header.forEach((h, i) => {
-      const k = h.trim().toLowerCase();
-      if (!k || handled.has(k) || idx.get(k) !== i) return;
+    m.names.forEach((h, i) => {
+      const k = h.toLowerCase();
+      if (h === FULLNAME_COL || h.startsWith('\u0003')) return;
+      if (handled.has(k) && idx.get(k) === i) return;
       const v = row[i] ?? '';
       if (isOutlookFiller(h, v)) return;
-      L.push(`X-OUTLOOK-${h.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '')};${col(h.trim())}:` + E(v.trim()));
+      const display = h.startsWith('\u0002') ? `Column ${h.slice(4)}` : (handled.has(k) ? (header[i] || h).trim() + ` (column ${i + 1})` : h.trim());
+      L.push(`X-OUTLOOK-${display.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'FIELD'};${col(display)}:` + E(v.trim()));
     });
+    if (m.slots.length) L.push(...slotLines(m.slots, row));
     if (get('Notes').trim()) L.push('NOTE:' + E(get('Notes')));
     L.push('END:VCARD');
     return L.join('\r\n') + '\r\n';
   });
 
   const contacts = parseVCards(cards.join(''), label);
-  contacts.forEach((c, k) => { c.csv = { header, values: rows[k] }; c.format = 'csv'; });
+  contacts.forEach((c, k) => { c.csv = { header, values: rows[k], native: m.native }; c.format = 'csv'; });
   return contacts;
 }
 
@@ -1472,7 +1643,7 @@ function buildOutlookRow(c, header) {
   const overflow = [];
   const notesCol = at('Notes');
 
-  if (c.csv && !c.merged) {
+  if (c.csv && c.csv.native && !c.merged) {
     const src = new Map();
     c.csv.header.forEach((h, j) => { const k = h.trim().toLowerCase(); if (!src.has(k)) src.set(k, j); });
     lower.forEach((h, i) => { const j = src.get(h); if (j !== undefined) row[i] = c.csv.values[j] ?? ''; });
@@ -1661,29 +1832,78 @@ function setupDropZone(n) {
   input.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0], n); input.value = ''; });
 }
 
+// Spreadsheets (.xlsx/.xls — e.g. the CSV was opened in Excel and re-saved) are read with SheetJS, loaded only when needed.
+let sheetJsPromise = null;
+function loadSheetJs() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (!sheetJsPromise) sheetJsPromise = new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = () => resolve(window.XLSX);
+    sc.onerror = () => { sheetJsPromise = null; reject(new Error('Could not load the Excel reader (no internet?). In Excel use File → Save As → "CSV UTF-8 (Comma delimited)" and load that instead.')); };
+    document.head.appendChild(sc);
+  });
+  return sheetJsPromise;
+}
+
+const FILE_KIND_HELP = {
+  pst: 'This is an Outlook data file (.pst), not an export. In Outlook: File → Open & Export → Import/Export → Export to a file → Comma Separated Values → choose the Contacts folder → save the .csv, and load that. (Philip\'s Mac can also convert a .pst directly.)',
+  olm: 'This is an Outlook for Mac archive (.olm). In Outlook for Mac, open Contacts, select all, and drag them to the desktop to make a .vcf — or export a .csv from Outlook on Windows.',
+  zip: 'This is a .zip file. Unzip it first, then load the .csv or .vcf inside.',
+  msg: 'This is a single Outlook item (.msg). Export the whole Contacts folder as a .csv instead.',
+};
+
 function handleFile(file, n) {
-  if (!file.name.match(/\.(vcf|vcard|csv|txt)$/i)) { showToast('Please choose an Outlook .csv export or a .vcf file', 'error'); return; }
+  if (/\.(pdf|docx?|jpe?g|png|heic)$/i.test(file.name)) { showToast('That isn\'t a contacts file. Load the Outlook .csv export or a .vcf.', 'error'); return; }
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     const label = file.name.replace(/\.[^.]+$/, '');
     let parsed, encoding;
     try {
-      const decoded = decodeContactFile(e.target.result);
-      encoding = decoded.encoding;
-      parsed = parseContactFile(decoded.text, label);
-    } catch (err) { console.error(err); showToast('Could not read that file: ' + err.message, 'error'); return; }
+      const kind = sniffFileKind(e.target.result, file.name);
+      if (FILE_KIND_HELP[kind]) { alert(FILE_KIND_HELP[kind]); return; }
+      if (kind === 'xlsx' || kind === 'xls') {
+        showToast('Reading Excel file…', 'info');
+        const XLSX = await loadSheetJs();
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: false });
+        let rows = null;
+        for (const name of wb.SheetNames) {
+          const r = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: false, defval: '' });
+          if (r.length > 1) { rows = r; break; }
+        }
+        if (!rows) throw new Error('The spreadsheet is empty');
+        parsed = parseContactRows(rows, label, ',');
+        encoding = 'utf-8';
+      } else {
+        const decoded = decodeContactFile(e.target.result);
+        encoding = decoded.encoding;
+        parsed = parseContactFile(decoded.text, label);
+      }
+    } catch (err) { console.error(err); alert('Could not read that file.\n\n' + err.message); return; }
     const contacts = parsed.contacts;
     if (!contacts.length) { showToast('No contacts found in that file', 'error'); return; }
     const empties = contacts.filter(c => c.empty).length;
-    state.files[n - 1] = { name: file.name, size: file.size, contacts, label, format: parsed.format, header: parsed.header || null, delimiter: parsed.delimiter || ',', encoding };
+    state.files[n - 1] = { name: file.name, size: file.size, contacts, label, format: parsed.format, header: parsed.header || null, delimiter: parsed.delimiter || ',', encoding, mapping: parsed.mapping || null };
     const zone = document.getElementById('dropZone' + n);
     zone.classList.add('loaded');
     document.getElementById('dropTitle' + n).textContent = file.name;
-    document.getElementById('dropSub' + n).textContent = `${parsed.format === 'csv' ? 'Outlook CSV' : 'vCard'} · ${(file.size / 1024 / 1024).toFixed(1)} MB${parsed.format === 'csv' && encoding === 'windows-1252' ? ' · Windows encoding' : ''}`;
+    const kindLabel = parsed.format === 'vcf' ? 'vCard' : parsed.mapping && parsed.mapping.native ? 'Outlook CSV' : 'Contacts spreadsheet';
+    const encLabel = encoding === 'windows-1252' ? ' · Windows encoding' : /utf-16/.test(encoding) ? ' · Unicode (UTF-16)' : '';
+    document.getElementById('dropSub' + n).textContent = `${kindLabel} · ${(file.size / 1024 / 1024).toFixed(1)} MB${parsed.format === 'csv' ? encLabel : ''}`;
     const info = document.getElementById('fileInfo' + n);
     info.classList.remove('hidden');
     const withNotes = contacts.filter(c => c.notes).length;
-    info.textContent = `${(contacts.length - empties).toLocaleString()} contacts · ${withNotes.toLocaleString()} with notes${empties ? ` · ${empties} empty ${parsed.format === 'csv' ? 'rows' : 'cards'}` : ''}`;
+    const withEmail = contacts.filter(c => c.emails.length).length;
+    const withPhone = contacts.filter(c => c.phones.length).length;
+    let text = `${(contacts.length - empties).toLocaleString()} contacts · ${withEmail.toLocaleString()} with email · ${withPhone.toLocaleString()} with phone · ${withNotes.toLocaleString()} with notes${empties ? ` · ${empties} empty ${parsed.format === 'csv' ? 'rows' : 'cards'}` : ''}`;
+    if (parsed.mapping) {
+      const mp = parsed.mapping;
+      text += `\n${mp.recognised} of ${mp.columns} columns recognised${mp.extras.length ? ` · ${mp.extras.length} kept as extra fields` : ''}`;
+      const missing = [!mp.hasEmail && 'email', !mp.hasPhone && 'phone', !mp.hasNotes && 'notes'].filter(Boolean);
+      if (missing.length) text += ` · ⚠ no ${missing.join(' / ')} column found`;
+    }
+    info.textContent = text;
+    info.style.whiteSpace = 'pre-line';
     document.getElementById('clear' + n).classList.remove('hidden');
     invalidateAnalysis();
     checkReady();
@@ -2340,7 +2560,7 @@ function downloadDuplicateList() {
 
 // Outlook CSV: reuse the loaded Outlook file's exact columns, delimiter and encoding when there is one.
 function outlookCSVFor(contacts) {
-  const csvFiles = state.files.filter(f => f && f.format === 'csv');
+  const csvFiles = state.files.filter(f => f && f.format === 'csv' && f.mapping && f.mapping.native);
   let header = null;
   for (const f of csvFiles) {
     if (!header) header = [...f.header];
@@ -2348,7 +2568,7 @@ function outlookCSVFor(contacts) {
   }
   const first = csvFiles[0];
   const text = writeOutlookCSV(contacts, header, first ? first.delimiter : ',');
-  return encodeOutlookCSV(text, first ? first.encoding : 'utf-8');
+  return encodeOutlookCSV(text, first && first.encoding === 'windows-1252' ? 'windows-1252' : 'utf-8');
 }
 function generateCSV() { return writeOutlookCSV(exportSet().contacts, null, ','); }
 function downloadCSV() {

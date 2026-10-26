@@ -19,7 +19,7 @@ const E = new Function(src + `
            checkFieldIntegrity, uniqueNotes, combineNotes, noteCharCount, escapeVCardValue, unescapeVCardValue,
            normalizePhone, normalizeEmail, nameVariants, pickBestName, titleCase, NOTE_SEP, MERGE_FOOTER_HEAD,
            decodeContactFile, parseContactFile, parseCSV, writeOutlookCSV, encodeOutlookCSV, buildOutlookRow,
-           suspectTruncatedNotes, OUTLOOK_DEFAULT_HEADER };`)();
+           suspectTruncatedNotes, OUTLOOK_DEFAULT_HEADER, parseContactRows, sniffFileKind };`)();
 
 let passed = 0, failed = 0;
 function test(name, fn) {
@@ -264,8 +264,77 @@ test('a semicolon-delimited export (European Outlook) is read too', () => {
   assert.equal(r.delimiter, ';');
   assert.equal(r.contacts[0].notes, 'line 1\nline; 2');
 });
-test('a non-Outlook CSV is rejected with a clear message', () => {
-  assert.throws(() => E.parseContactFile('Name,Amount\nBob,3\n', 'x'), /Outlook contacts export/);
+test('a CSV with no name/email/phone columns is rejected with a clear message', () => {
+  assert.throws(() => E.parseContactFile('Date,Amount,Memo\n2026-01-01,3,x\n', 'x'), /Couldn't find name, email or phone columns/);
+});
+
+console.log('Other export formats');
+const utf16 = s => { const b = Buffer.from('﻿' + s, 'utf16le'); return new Uint8Array(b); };
+test('UTF-16 tab-delimited Outlook export (Excel "Unicode Text") with a multi-line note', () => {
+  const txt = 'First Name\tLast Name\tE-mail Address\tMobile Phone\tNotes\r\nRenée\tO\'Brien\trenee@x.com\t415-555-0101\t"line one\r\nline two — ok"\r\n';
+  const d = E.decodeContactFile(utf16(txt));
+  assert.equal(d.encoding, 'utf-16le');
+  const r = E.parseContactFile(d.text, 'u16');
+  assert.equal(r.delimiter, '\t');
+  const c = r.contacts[0];
+  assert.equal(c.name, "Renée O'Brien");
+  assert.equal(c.notes, 'line one\nline two — ok');
+  assert.deepEqual(c.phones, ['415-555-0101']);
+});
+test('UTF-16 without a BOM is still detected', () => {
+  const b = new Uint8Array(Buffer.from('First Name,Last Name,E-mail Address\r\nAl,Bee,al@x.com\r\n', 'utf16le'));
+  assert.equal(E.decodeContactFile(b).encoding, 'utf-16le');
+});
+test('Google Contacts CSV: numbered Phone/E-mail/Address columns, ":::" multi-values, labels', () => {
+  const g = 'First Name,Middle Name,Last Name,Nickname,Organization Name,Organization Title,Birthday,Notes,Labels,E-mail 1 - Label,E-mail 1 - Value,E-mail 2 - Label,E-mail 2 - Value,Phone 1 - Label,Phone 1 - Value,Phone 2 - Label,Phone 2 - Value,Address 1 - Label,Address 1 - Street,Address 1 - City,Address 1 - Region,Address 1 - Postal Code,Address 1 - Country\r\n' +
+    'Jamie,,Fowler,Jay,Acme,CEO,1970-05-01,"note a\nnote b",* myContacts ::: Friends,* Home,jamie@x.com ::: jf@y.com,Work,jamie@acme.com,Mobile,(415) 555-0123 ::: (415) 555-0124,Work Fax,(415) 555-0199,Home,1 Main St,SF,CA,94110,USA\r\n';
+  const r = E.parseContactFile(g, 'google');
+  assert.equal(r.mapping.native, false);
+  const c = r.contacts[0];
+  assert.equal(c.name, 'Jamie Fowler');
+  assert.equal(c.org, 'Acme');
+  assert.equal(c.title, 'CEO');
+  assert.deepEqual(c.emails.sort(), ['jamie@acme.com', 'jamie@x.com', 'jf@y.com']);
+  assert.equal(c.phones.length, 3);
+  assert.ok(c.props.some(p => p.name === 'TEL' && /FAX/.test(p.params)));
+  assert.ok(c.addresses[0].includes('1 Main St'));
+  assert.equal(c.notes, 'note a\nnote b');
+  // exported to Outlook columns, not dumped into Notes
+  const row = E.buildOutlookRow(c, E.OUTLOOK_DEFAULT_HEADER);
+  const cell = n => row[E.OUTLOOK_DEFAULT_HEADER.indexOf(n)];
+  assert.equal(cell('First Name'), 'Jamie');
+  assert.equal(cell('Mobile Phone'), '(415) 555-0123');
+  assert.equal(cell('Business Fax'), '(415) 555-0199');
+  assert.equal(cell('Home Street'), '1 Main St');
+  assert.ok(cell('Notes').startsWith('note a\r\nnote b'));
+});
+test('hand-made sheet "Name, Email, Phone, Notes" with a title line and Excel "sep=," hint', () => {
+  const t = 'sep=,\r\nPhyllis contacts export\r\nName,Email,Cell,Comments,Favorite Color\r\n"Lee, Ann",ann@x.com,555-0100,"hi, there",blue\r\n';
+  const r = E.parseContactFile(t, 'sheet');
+  const c = r.contacts[0];
+  assert.equal(c.name, 'Lee, Ann');
+  assert.deepEqual(c.nField.slice(0, 2), ['Lee', 'Ann']);
+  assert.deepEqual(c.emails, ['ann@x.com']);
+  assert.deepEqual(c.phones, ['555-0100']);
+  assert.equal(c.notes, 'hi, there');
+  assert.ok(c.props.some(p => p.name.startsWith('X-OUTLOOK-FAVORITE-COLOR') && p.value === 'blue'), 'unknown column kept');
+});
+test('rows from a spreadsheet library (xlsx path) parse the same as CSV', () => {
+  const r = E.parseContactRows([['First Name', 'Last Name', 'E-mail Address', 'Notes'], ['Bo', 'Diddley', 'bo@x.com', 'a\nb'], ['', '', '', '']], 'xl', ',');
+  assert.equal(r.contacts.filter(c => !c.empty).length, 1);
+  assert.equal(r.contacts[0].notes, 'a\nb');
+});
+test('file sniffing: .pst / .xlsx / zip / plain text', () => {
+  assert.equal(E.sniffFileKind(new Uint8Array([0x21, 0x42, 0x44, 0x4E, 0]), 'x.bin'), 'pst');
+  assert.equal(E.sniffFileKind(new Uint8Array([0x50, 0x4B, 3, 4]), 'Contacts.xlsx'), 'xlsx');
+  assert.equal(E.sniffFileKind(new Uint8Array([0x50, 0x4B, 3, 4]), 'Contacts.olm'), 'olm');
+  assert.equal(E.sniffFileKind(new Uint8Array([0x46, 0x69]), 'Contacts.CSV'), 'text');
+});
+test('a duplicate header name never loses the second column', () => {
+  const r = E.parseContactFile('First Name,Last Name,Notes,Notes\r\nA,B,one,two\r\n', 'dup');
+  const c = r.contacts[0];
+  assert.equal(c.notes, 'one');
+  assert.ok(c.props.some(p => p.value === 'two'), 'second Notes column kept as an extra field');
 });
 test('Outlook CSV + iPhone vCard two-file mode cross-matches the same person', () => {
   const v = E.parseVCards(card(['FN:Nellie Boykoff', 'N:Boykoff;Nellie;;;', 'TEL;type=CELL:+1 (415) 260-4307', 'NOTE:From the phone']), 'iPhone');

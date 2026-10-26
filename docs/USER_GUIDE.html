@@ -5,173 +5,198 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DeDupe Pro Guide</title>
 <style>
-  :root { --ink:#16182b; --soft:#4a4f6a; --line:#d9dce8; --bg:#ffffff; --panel:#f4f5fa; --accent:#4338ca; --warn:#9a3412; --warnbg:#fff4e8; --ok:#065f46; --okbg:#e9f8f1; --stop:#991b1b; --stopbg:#fdeeee; }
+  :root { --ink:#15172a; --soft:#45495f; --line:#d7dae6; --bg:#fff; --panel:#f3f4f9; --accent:#3730a3; --stop:#991b1b; --stopbg:#fdeeee; --ok:#065f46; --okbg:#e8f7f0; --tip:#1e40af; --tipbg:#eef3ff; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.55 -apple-system, "Segoe UI", system-ui, sans-serif; }
-  main { max-width:860px; margin:0 auto; padding:28px 16px 64px; }
-  h1 { font-size:30px; margin:0 0 4px; letter-spacing:-0.5px; }
-  .sub { color:var(--soft); margin:0 0 24px; }
-  h2 { font-size:21px; margin:34px 0 10px; padding-top:14px; border-top:2px solid var(--line); }
-  h2 .n { display:inline-block; min-width:30px; height:30px; line-height:30px; text-align:center; border-radius:50%; background:var(--accent); color:#fff; font-size:15px; margin-right:8px; }
-  h3 { font-size:17px; margin:18px 0 6px; }
-  ol, ul { padding-left:24px; } li { margin:4px 0; }
-  code, kbd { font:14px/1.4 ui-monospace, Menlo, Consolas, monospace; background:var(--panel); border:1px solid var(--line); border-radius:5px; padding:1px 6px; }
-  pre { font:14px/1.5 ui-monospace, Menlo, Consolas, monospace; background:#1d1f33; color:#f1f2f8; padding:12px 14px; border-radius:8px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; }
-  .box { border-radius:10px; padding:12px 16px; margin:14px 0; border:1px solid var(--line); background:var(--panel); }
-  .stop { background:var(--stopbg); border-color:#f3c4c4; } .stop b:first-child { color:var(--stop); }
-  .warn { background:var(--warnbg); border-color:#f6d4b3; } .warn b:first-child { color:var(--warn); }
-  .ok { background:var(--okbg); border-color:#b9e6d2; } .ok b:first-child { color:var(--ok); }
-  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:15.5px; }
-  th, td { text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+  body { margin:0; background:var(--bg); color:var(--ink); font:19px/1.6 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  main { max-width:820px; margin:0 auto; padding:28px 18px 80px; }
+  h1 { font-size:32px; margin:0 0 6px; letter-spacing:-0.4px; }
+  .sub { color:var(--soft); margin:0 0 22px; }
+  h2 { font-size:25px; margin:40px 0 10px; padding-top:16px; border-top:3px solid var(--line); }
+  h3 { font-size:20px; margin:22px 0 6px; }
+  ol, ul { padding-left:28px; } li { margin:8px 0; }
+  b.btn { display:inline-block; padding:0 8px; border:1.5px solid #9aa0bd; border-radius:7px; background:#f7f8fc; font-weight:600; white-space:nowrap; }
+  code { font:16px ui-monospace, Menlo, monospace; background:var(--panel); border:1px solid var(--line); border-radius:5px; padding:1px 6px; }
+  pre { font:15px/1.5 ui-monospace, Menlo, monospace; background:#1d1f33; color:#f1f2f8; padding:12px 14px; border-radius:8px; white-space:pre-wrap; word-break:break-all; }
+  .box { border-radius:12px; padding:14px 18px; margin:16px 0; border:1.5px solid var(--line); background:var(--panel); }
+  .stop { background:var(--stopbg); border-color:#efb9b9; } .stop strong { color:var(--stop); }
+  .ok { background:var(--okbg); border-color:#a9dfc6; } .ok strong { color:var(--ok); }
+  .tip { background:var(--tipbg); border-color:#c3d3fb; } .tip strong { color:var(--tip); }
+  .philip { margin-top:60px; border-top:6px double var(--line); font-size:17px; }
+  .philip h2 { font-size:22px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:17px; }
+  th, td { text-align:left; vertical-align:top; padding:9px 10px; border-bottom:1px solid var(--line); }
   th { background:var(--panel); }
-  .check li { list-style:none; margin-left:-22px; } .check li::before { content:"☐  "; }
-  .toc { columns:2; font-size:15.5px; } .toc a { color:var(--accent); text-decoration:none; }
-  @media (max-width:640px) { .toc { columns:1; } }
-  @media print { h2 { break-after:avoid; } .box, table, pre { break-inside:avoid; } body { font-size:14px; } }
+  .toc a { color:var(--accent); }
+  @media print { h2 { break-after:avoid; } .box, table, li { break-inside:avoid; } body { font-size:15px; } }
 </style>
 </head>
 <body>
 <main>
-<h1>DeDupe Pro: on-site guide</h1>
-<p class="sub">For cleaning up Phyllis's contacts. October 2026 version (v7 + Outlook CSV + any-format loader).</p>
 
-<div class="box warn"><b>Use the offline copy today, not the website.</b> The newest fixes are in <code>DeDupe Pro (offline).html</code> on your Mac's Desktop. They are the damage warnings and the guard that stops a file with no header row from being misread. The website (dedupe-pro.vercel.app) still runs the version from earlier today: it reads Outlook CSVs fine but lacks those checks. To use the app on Phyllis's PC, copy the offline file to the flash drive and double-click it there; it opens in Firefox and works without internet. To update the website, run <code>vercel deploy --prod</code> yourself in the project folder.</div>
+<h1>Phyllis's contact clean-up</h1>
+<p class="sub">How to use <b>DeDupe Pro</b> on your MacBook Air. Everything happens on this computer. Nothing is sent anywhere, and nothing changes on your phone, in Outlook, or on the Synology.</p>
 
-<div class="toc">
-  <a href="#safety">1. Safety first (before touching anything)</a><br>
-  <a href="#export">2. Get the contacts out of Outlook</a><br>
-  <a href="#load">3. Load the file and check it</a><br>
-  <a href="#fallback">4. If the app won't read it: Mac converter</a><br>
-  <a href="#review">5. Review the duplicates</a><br>
-  <a href="#download">6. Download the results</a><br>
-  <a href="#import">7. Putting it back into Outlook (carefully)</a><br>
-  <a href="#compare">8. Comparing two lists (Outlook vs iPhone)</a><br>
-  <a href="#trouble">9. Troubleshooting</a><br>
-  <a href="#never">10. Never do this</a>
+<div class="box stop"><strong>The one rule:</strong> never double-click a contact file (names ending in <code>.vcf</code> or <code>.csv</code>), and never open one in the Contacts app. Doing that can copy thousands of contacts into your Mac. Only ever open contact files <b>from inside DeDupe Pro</b>, using the steps below.</div>
+
+<p class="toc"><b>What's in this guide</b><br>
+<a href="#open">Opening the app</a> ·
+<a href="#lookup">Job 1 — Look up a contact</a> ·
+<a href="#new">Job 2 — Find contacts that are only on your iPhone</a> ·
+<a href="#dupes">Job 3 — Go through your duplicates</a> ·
+<a href="#help">If something goes wrong</a> ·
+<a href="#philip">Setup notes for Philip</a></p>
+
+<h2 id="open">Opening the app</h2>
+<ol>
+  <li>On your Desktop, open the folder <b>DeDupe Pro for Phyllis</b>.</li>
+  <li>Double-click <b>Open DeDupe Pro</b>. It opens in your web browser. It isn't a website, and it works without the internet.</li>
+  <li>If the writing is small, click <b class="btn">A A</b> at the top right. Click <b class="btn">◑</b> to switch between a light and a dark background. The app remembers both.</li>
+</ol>
+<p>Your two contact lists are already in the same folder:</p>
+<ul>
+  <li><b>Outlook contacts (iBuyPower)</b>: your main list from the big computer.</li>
+  <li><b>iPhone contacts</b>: everything that was on your phone.</li>
+</ul>
+<p>To open a list in the app, <b>drag the file from the folder onto one of the two dashed boxes</b>. You can also click the box and choose the file.</p>
+
+<h2 id="lookup">Job 1: Look up a contact</h2>
+<p>Use this when you need a phone number or a note, for example if your phone is lost.</p>
+<ol>
+  <li>Drag <b>iPhone contacts</b> onto the first box, <b>Main contact file</b>.</li>
+  <li>Click <b class="btn">📖 Just Browse Contacts</b>.</li>
+  <li>Type part of a name, number, company, or a word from a note into the search box. You can also click a letter.</li>
+  <li>Click a name to see the whole card, including all of its notes.</li>
+</ol>
+<p>When you're done, close the browser window. Nothing was changed.</p>
+
+<h2 id="new">Job 2: Find contacts that are only on your iPhone</h2>
+<p>Your newer contacts are on the phone but not in Outlook. This job makes a list of just those, so Philip can add them to Outlook later.</p>
+
+<h3>Part A: compare the two lists</h3>
+<ol>
+  <li>Open the app. If anything is already loaded, click <b class="btn">Start Over</b>.</li>
+  <li>Drag <b>Outlook contacts (iBuyPower)</b> onto the <b>first</b> box.</li>
+  <li>Drag <b>iPhone contacts</b> onto the <b>second</b> box.</li>
+  <li>Scroll down a little and tick the box <b>"Two files: only look for duplicates between the files."</b></li>
+  <li>Click <b class="btn">🔍 Find Duplicates</b> and wait a few seconds.</li>
+  <li>Click <b class="btn">💾 Export Clean Contacts</b> at the bottom right.</li>
+  <li>Find the card titled <b>Only in "iPhone contacts…"</b> and click its <b class="btn">📱 Outlook .csv</b> button. A file starting with <code>ONLY_IN_</code> goes into your <b>Downloads</b> folder.</li>
+</ol>
+
+<h3>Part B: tidy up that list</h3>
+<ol>
+  <li>Click <b class="btn">Start Over</b>.</li>
+  <li>Open your <b>Downloads</b> folder in Finder and drag the <code>ONLY_IN_…</code> file onto the <b>first</b> box.</li>
+  <li>Make sure the "two files" box is <b>not</b> ticked, then click <b class="btn">🔍 Find Duplicates</b>.</li>
+  <li>Go through the groups the same way as in Job 3 below. The list is short.</li>
+  <li>Click <b class="btn">💾 Export Clean Contacts</b> and then <b class="btn">📊 Download Outlook CSV</b>.</li>
+  <li>Drag the new file (its name contains <code>CLEAN_FOR_OUTLOOK</code>) from Downloads into the <b>For Philip</b> folder.</li>
+</ol>
+<div class="box ok"><strong>That's it for Job 2.</strong> Philip adds these to Outlook carefully on his next visit. Please don't import them yourself.</div>
+
+<h2 id="dupes">Job 3: Go through your duplicates</h2>
+<p>The app finds contacts that appear more than once in your Outlook list and shows them side by side. You decide what to merge. It never throws away a note, phone number, email, or address.</p>
+
+<div class="box stop"><strong>While you're doing Job 3, please stop deleting duplicates by hand in Outlook.</strong> The app is working from a copy of your list made on October 26. Changes made in Outlook from now on would be overwritten later. It's fine to keep <b>adding</b> new contacts as usual; just tell Philip roughly how many.</div>
+
+<h3>Getting started</h3>
+<ol>
+  <li>Open the app. If anything is already loaded, click <b class="btn">Start Over</b>.</li>
+  <li>Drag <b>Outlook contacts (iBuyPower)</b> onto the <b>first</b> box, and leave the second box empty.</li>
+  <li>Leave the setting on <b class="btn">Balanced 60%</b>. Click <b class="btn">🔍 Find Duplicates</b>.</li>
+  <li>At the top, change <b>All statuses</b> to <b>Needs decision</b>. Now you only see the groups waiting for you. The sure-thing groups are already marked <b>Will merge</b>, and you don't need to touch them.</li>
+</ol>
+
+<h3>For each group</h3>
+<ol>
+  <li><b>Click the group's name</b> to open it. You see each copy side by side, and below them a purple box called <b>Merged result</b>. That box shows what you'll end up with.</li>
+  <li>Choose one:
+    <table>
+      <tr><th>If…</th><th>Click</th></tr>
+      <tr><td>They're the same person or business</td><td><b class="btn">✔ Merge</b></td></tr>
+      <tr><td>They're different people (husband and wife, two doctors at the same office, a nurse you filed under the doctor)</td><td><b class="btn">✖ Skip</b>. They stay separate, exactly as they are now.</td></tr>
+      <tr><td>Most of the group is the same person, but one card isn't</td><td><b class="btn">✖ Not a dupe</b> on that one card, then <b class="btn">✔ Merge</b> for the rest.</td></tr>
+      <tr><td>You're not sure</td><td>Leave it. Come back later, or ask Philip.</td></tr>
+    </table>
+  </li>
+  <li><b>To choose the name that's kept</b>, click one of the names next to <b>"Name to keep"</b> in the purple box. The other spellings are saved in the notes, so nothing is lost.</li>
+  <li><b>To fix a name or number by hand</b>, click <b class="btn">✏ Edit</b>, type the change, and click <b class="btn">Save &amp; Merge</b>. Please don't delete text from the Notes box.</li>
+  <li><b>Made a mistake?</b> Click <b class="btn">↩ Undo</b> at the top.</li>
+</ol>
+<div class="box tip"><strong>Tips:</strong>
+  <ul>
+    <li>Start with the <b>95–100%</b> tab; those are the easy ones.</li>
+    <li>The lower percentages are often <b>not</b> duplicates: a household sharing a phone, different departments at CPMC, or companies with the same 800 number. <b class="btn">✖ Skip</b> is usually right there.</li>
+    <li>A yellow or red label like "Different organizations" means "look carefully".</li>
+  </ul>
 </div>
 
-<h2 id="safety"><span class="n">1</span>Safety first, before touching anything</h2>
-<p>Contacts sync from Outlook through CalDav Synchronizer to the Synology and on to every iPhone and iPad. A mistake in one place spreads everywhere. That is how the notes were lost the first time.</p>
-<ul class="check">
-  <li><b>Back up Outlook:</b> on the iBuyPower, use File → Open &amp; Export → Import/Export → Export to a file → Outlook Data File (.pst) → pick the contacts folder. Save it to the flash drive with today's date in the name.</li>
-  <li><b>Pause CalDav Synchronizer on both PCs, the iBuyPower and the Dell.</b> In Outlook, open the CalDav Synchronizer ribbon and turn off auto-sync, or disable the profile. Doing only one PC isn't enough.</li>
-  <li><b>Find which folder CalDav Synchronizer syncs</b> (open its profile and note the Outlook folder name). That is the folder to export in step 2.</li>
-  <li><b>Note Outlook's own contact count</b> for that folder (shown at the bottom of the People view). You'll compare against it. It includes contact groups, so expect the app's count to be a little lower.</li>
-  <li>Leave <code>Outlook File for Note Copying.pst</code> alone. It's the pre-dedup snapshot with the original notes.</li>
-</ul>
-
-<h2 id="export"><span class="n">2</span>Get the contacts out of Outlook</h2>
-<ol>
-  <li>In Outlook: <b>File → Open &amp; Export → Import/Export</b>.</li>
-  <li><b>Export to a file → Comma Separated Values → </b>choose the contacts folder from step 1 → <b>Next</b>.</li>
-  <li>Save it to the flash drive as something like <code>Outlook contacts 2026-10-26.csv</code>, then <b>Finish</b>.</li>
-</ol>
-<div class="box stop"><b>Don't double-click the CSV.</b> On Windows it opens in Excel, and if it's saved again Excel rewrites phone numbers, dates and accents. If that happens, export again. The app warns you if it spots Excel damage.</div>
-<p>Other files the app can read if that's what you have: an iPhone or Synology <code>.vcf</code>, a Google Contacts CSV, an Excel <code>.xlsx</code>, or a "Unicode text" export. A <code>.pst</code> needs the Mac converter (section 4).</p>
-
-<h2 id="load"><span class="n">3</span>Load the file and check it</h2>
-<ol>
-  <li>Open <code>DeDupe Pro (offline).html</code>. Optional: click <b>A A</b> (top right) for larger text and <b>◑</b> for a light background.</li>
-  <li>Drag the CSV onto <b>Main contact file</b>, or click it and choose the file. Nothing is uploaded; the file is read on this computer only.</li>
-  <li>Check what the box says:</li>
-</ol>
-<table>
-  <tr><th>You see</th><th>Meaning</th></tr>
-  <tr><td><b>Outlook CSV · Windows encoding</b> and <b>92 of 92 columns recognised</b> (or similar)</td><td>Ideal. Contacts that aren't merged go back into Outlook exactly as they were exported.</td></tr>
-  <tr><td><b>Contacts spreadsheet</b></td><td>Not a standard Outlook export (Google, Excel or homemade). It still works; the app rebuilds these rows in Outlook's columns.</td></tr>
-  <tr><td><b>N contacts · N with email · N with phone · N with notes</b></td><td>The contact count should be close to Outlook's count from step 1. If "with email" is zero, the email column wasn't recognised. Stop and tell Claude.</td></tr>
-  <tr><td><b>⚠ no email / phone / notes column found</b></td><td>That column wasn't recognised. Nothing is lost (unknown columns are kept), but matching will be weaker.</td></tr>
-  <tr><td>Pop-up: <b>notes are exactly N characters long</b></td><td>The export probably cut long notes short. Compare one long note in Outlook with the app before going on (step 4 below).</td></tr>
-  <tr><td>Pop-up: <b>rows don't line up / unclosed quote / damaged by Excel</b></td><td>The file is damaged. Export it from Outlook again and don't open it in Excel.</td></tr>
-</table>
-<ol start="4">
-  <li><b>Spot-check one long note.</b> Click <b>Just Browse Contacts</b>, search for someone with a long, multi-line note, and compare it with Outlook. If Outlook shows more text, the export lost it before the app saw it. In that case don't continue with this file.</li>
-</ol>
-
-<h2 id="fallback"><span class="n">4</span>If the app won't read it: the Mac converter</h2>
-<p>Use this when the app refuses the file, or when all you have is a <code>.pst</code>. It converts the file on your Mac into a <code>.vcf</code> the app definitely reads. It <b>prints only counts</b> (never names, numbers or notes), so it's safe to have Claude run it for you.</p>
-<p>Ask Claude: <i>"Run the contact converter on the file at &lt;path&gt;"</i>. Or run it yourself in Terminal:</p>
-<pre>cd "~/MHN1 Dropbox/Philip King/Mac/Documents/Apps/DeDupe Pro copy"
-node tools/convert-contacts.mjs "/Volumes/FLASHDRIVE/Outlook contacts 2026-10-26.csv"</pre>
+<h3>Stopping and coming back</h3>
 <ul>
-  <li>It writes <code>….CONVERTED.vcf</code> and <code>….CONVERTED-for-Outlook.csv</code> next to the original. Load the <b>.vcf</b> into the app.</li>
-  <li>Both "Re-read check" lines should say <b>OK</b>.</li>
-  <li><b>.pst files:</b> quit Outlook first (Outlook locks the file), or work on a copy. This path hasn't been tested on a real .pst yet, so compare the counts with Outlook.</li>
-  <li>If it says FAILED with hidden details, run it yourself with <code>--debug</code> on the end to see the error. Do this in your own Terminal, because that output may show contact data.</li>
+  <li>You can stop at any time. Just close the browser window. If it asks "Leave page?", click <b>Leave</b>.</li>
+  <li>Next time, open the app, drag in the <b>same</b> Outlook file, keep the same settings, and click <b class="btn">🔍 Find Duplicates</b>. It asks <b>"pick up where you left off?"</b> Click <b class="btn">OK</b>.</li>
+  <li><b>Don't click Start Over</b> in the middle of Job 3. That clears your saved progress.</li>
+  <li><b>Save a copy at the end of each sitting</b>, in case the computer forgets: click <b class="btn">💾 Export Clean Contacts</b>, then download the <b>Outlook CSV</b> and the <b>Audit log</b>. Drag both into <b>For Philip</b>.</li>
 </ul>
 
-<h2 id="review"><span class="n">5</span>Review the duplicates</h2>
+<h3>When you're finished</h3>
 <ol>
-  <li>Leave the setting at <b>Balanced 60%</b> and click <b>Find Duplicates</b>.</li>
-  <li>Groups that are 95% or more and have no warnings are already marked <b>Will merge (pre-approved)</b>. Everything else waits for you.</li>
-  <li>Set the status filter to <b>Needs decision</b>. Work through the 95–100% tab first, then the lower ones.</li>
-  <li>Click a group to open it. For each one:
-    <ul>
-      <li><b>Name to keep</b>: click the spelling you want, such as "Nellie Boykoff" rather than "Nurse X and Nellie Boykoff". The other spellings are saved in the notes.</li>
-      <li><b>✖ Not a dupe</b> (on one card, in groups of 3 or more): takes that card out of the group.</li>
-      <li><b>✔ Merge</b>: combine them. <b>✖ Skip</b>: keep them separate. <b>✏ Edit</b>: fix a field. The edit box only closes with Cancel, Save or Esc.</li>
-      <li><b>↩ Undo</b> (top) reverses the last action.</li>
-    </ul>
-  </li>
-  <li>The green line under the merged preview, <b>"Notes: N chars kept of N"</b>, confirms no note text is lost.</li>
-  <li><b>Groups with warnings need a person's judgement</b>, especially "Different organizations". Phyllis sometimes files a nurse or office under the doctor's name on purpose.</li>
-  <li>The lower tiers are mostly <b>not</b> duplicates: households sharing a phone, CPMC departments, 800 numbers. Skip is usually right there.</li>
-</ol>
-<div class="box ok"><b>Progress saves itself in this browser.</b> If the tab closes, load the same file with the same settings and click Find Duplicates; it offers to pick up where you left off. On Phyllis's PC, that saved progress stays in Firefox on her machine.</div>
-
-<h2 id="download"><span class="n">6</span>Download the results</h2>
-<p>Click <b>Export Clean Contacts</b>. Check that <b>Note integrity</b> and <b>Field integrity</b> both say <b>OK</b>, then download:</p>
-<ul>
-  <li><b>Clean contacts for Outlook (.csv)</b>: same columns as her export, ready for Outlook.</li>
-  <li><b>Clean contacts (.vcf)</b>: for the Synology, iPhone or Mac.</li>
-  <li><b>Audit log</b>: which cards were merged into which. Keep it.</li>
-  <li><b>Duplicate list (.txt)</b>: a printable list of every group, the one Phyllis asked for.</li>
-</ul>
-<p>Save everything to the flash drive, next to the original export and the .pst backup.</p>
-
-<h2 id="import"><span class="n">7</span>Putting it back into Outlook (carefully)</h2>
-<div class="box stop"><b>Today: test only. Don't replace her live contacts.</b> Importing the clean file over the synced folder either doubles every contact on every device ("Allow duplicates") or leaves the merged-away duplicates behind ("Replace"). Swapping folders gives every contact a new identity, which breaks iPhone Favorites.</div>
-<ol>
-  <li>In Outlook, make a <b>new contacts folder that CalDav Synchronizer does not sync</b>, for example "Clean test 2026-10-26".</li>
-  <li><b>File → Open &amp; Export → Import/Export → Import from another program or file → Comma Separated Values</b> → choose the clean CSV → <b>Do not import duplicate items</b> → import into the new folder.</li>
-  <li>Check the count, a few long notes, and an accented name. If accents look wrong, tell Claude; it may need a different encoding.</li>
-  <li><b>Next visit, not today:</b>
-    <ul>
-      <li>Send 5 test contacts through the full chain: Outlook → Synology → iPhone.</li>
-      <li>Practise restoring from the .pst backup.</li>
-      <li>Only then plan the switch-over, with CalDav Synchronizer paused on both PCs.</li>
-    </ul>
-  </li>
-  <li>When you're done, turn CalDav Synchronizer back on for <b>both</b> PCs.</li>
+  <li>Click <b class="btn">💾 Export Clean Contacts</b>. Check that the two boxes <b>Note integrity</b> and <b>Field integrity</b> both say <b>OK</b>.</li>
+  <li>Download <b>Clean contacts for Outlook (.csv)</b>, <b>Audit log</b>, and <b>Duplicate list</b>.</li>
+  <li>Drag all three from <b>Downloads</b> into <b>For Philip</b>, and let Philip know.</li>
 </ol>
 
-<h2 id="compare"><span class="n">8</span>Comparing two lists (Outlook vs iPhone or Synology)</h2>
-<ol>
-  <li>Clean each list on its own first (sections 3–6).</li>
-  <li>Load one in <b>Main contact file</b> and the other in <b>Second file</b>. Tick <b>only look for duplicates between the files</b>, then click Find Duplicates.</li>
-  <li>The export screen offers <b>Only in "iPhone"</b> and <b>Only in "Outlook"</b> downloads, as an Outlook .csv or a .vcf. These are the contacts the other list is missing, such as new patients added on the phone.</li>
-</ol>
-<p class="box">This comparison also catches characters lost in Outlook's export. Its default "Windows" encoding can turn emoji and non-Latin names into "?". If an Outlook contact shows "?" where the iPhone copy has the real character, trust the iPhone copy.</p>
-
-<h2 id="trouble"><span class="n">9</span>Troubleshooting</h2>
+<h2 id="help">If something goes wrong</h2>
 <table>
-  <tr><th>Problem</th><th>What to do</th></tr>
-  <tr><td>"Couldn't find a header row…"</td><td>The file has no column headings, or it isn't a contacts export. Export again from Outlook (section 2), or use the Mac converter.</td></tr>
-  <tr><td>"This is an Outlook data file (.pst)"</td><td>Export a CSV instead, or use the Mac converter on the .pst with Outlook closed.</td></tr>
-  <tr><td>Excel file won't load</td><td>Reading Excel files needs internet once. Without internet, in Excel use Save As → "CSV UTF-8 (Comma delimited)" and load that.</td></tr>
-  <tr><td>Count far lower than Outlook's</td><td>Check whether the right folder was exported, and whether there's a warning about rows not lining up. Contact groups aren't counted.</td></tr>
-  <tr><td>Blank page on Phyllis's PC</td><td>Firefox is too old. Update Firefox, or use the Mac.</td></tr>
-  <tr><td>Export says note integrity has issues</td><td>An edited group has shorter notes than the originals. Search for the name in Review, then fix or Skip it.</td></tr>
+  <tr><th>What you see</th><th>What to do</th></tr>
+  <tr><td>A message pops up when you drag a file in</td><td>Read it, click OK, and take a photo of it for Philip. Nothing has been changed.</td></tr>
+  <tr><td>The Contacts app opened and asks to add contacts</td><td>Click <b>Cancel</b>. A contact file was double-clicked by mistake.</td></tr>
+  <tr><td>A spreadsheet (Numbers or Excel) opened</td><td>Close it and click <b>Don't Save</b>.</td></tr>
+  <tr><td>The app didn't offer to pick up where you left off</td><td>Make sure you dragged in the same Outlook file and didn't change the settings. If it still doesn't offer, call Philip before starting again. Your saved copy in For Philip still has your work up to the last save.</td></tr>
+  <tr><td>The page is blank or looks broken</td><td>Close the browser and double-click <b>Open DeDupe Pro</b> again. If it's still broken, try right-click → Open With → Safari.</td></tr>
+  <tr><td>Anything else</td><td>Stop and call Philip. Nothing in this app changes your real contacts, so nothing can break while you wait.</td></tr>
 </table>
 
-<h2 id="never"><span class="n">10</span>Never do this</h2>
+<!-- ───────────────────────── PHILIP ───────────────────────── -->
+<section class="philip" id="philip">
+<h2>Setup notes for Philip</h2>
+
+<h3>1. Put the app on her MacBook Air (5 minutes)</h3>
+<ol>
+  <li>On your Mac, copy the Desktop folder <b>DeDupe Pro for Phyllis</b> to the flash drive. It holds <code>Open DeDupe Pro.html</code>, this guide, and an empty <b>For Philip</b> folder.</li>
+  <li>On her MacBook Air, drag that folder from the flash drive onto her <b>Desktop</b>.</li>
+  <li>Copy the two exports from the flash drive into the folder. <b>Rename them to end in <code>.txt</code></b>, so a double-click opens TextEdit instead of importing everything into Contacts or Numbers. When Finder asks, choose <b>Use .txt</b>. The app recognises the format from the contents, not the name.
+    <ul>
+      <li><code>Outlook contacts (iBuyPower) 2026-10-26.txt</code></li>
+      <li><code>iPhone contacts 2026-10-26.txt</code></li>
+    </ul>
+  </li>
+  <li>Double-click <b>Open DeDupe Pro</b>. If Safari blocks local files or shows a blank page, right-click → Open With → Firefox. Turn on large text (<b class="btn">A A</b>).</li>
+  <li><b>Test drive with her, 2 minutes:</b> drag in each file and check the counts. The iPhone file should show about 10,900 contacts; the Outlook file should be close to Outlook's own count. Then do Job 1 once together.</li>
+  <li>Keep the flash-drive copies as the backup. Eject the drive.</li>
+</ol>
+
+<h3>2. Why this is safe</h3>
 <ul>
-  <li>Never double-click a <code>.vcf</code> on the Mac: it imports every contact into Contacts. Never double-click a <code>.csv</code> on Windows: it opens in Excel.</li>
-  <li>Never edit contacts in the Synology Contacts web page (DSM); it can damage data.</li>
-  <li>Never import into the live, synced folder, and never run the cleanup on two PCs at once.</li>
-  <li>Never paste contact data into a chat with Claude. The converter is built so Claude only ever sees counts.</li>
-  <li>Don't <code>git push</code> the project. The GitHub repo is public, and the test files still contain a few real-looking names.</li>
+  <li>It's the same single file as the website, opened from disk. I checked that it runs from a file in Chrome; Safari and Firefox weren't tested, so use Firefox (her usual browser) if Safari misbehaves. It makes no network requests with contact data; it only loads fonts. Excel reading is the one feature that needs the internet, and her files are CSV and vCard, so it isn't used.</li>
+  <li>It only reads files she drags in and only writes to Downloads. It can't touch Outlook, the Synology, her iPhone, or Mac Contacts.</li>
+  <li>Saved progress lives only in that browser's local storage on her Mac. It contains her choices and any text typed into Edit, never a copy of the list.</li>
+  <li>If her Desktop &amp; Documents sync to iCloud Drive, this folder goes into <i>her own</i> iCloud. That's acceptable; just don't put it in a shared Dropbox folder.</li>
 </ul>
+
+<h3>3. Decision you're making by handing her Job 3</h3>
+<p>Her merges are made against <b>today's snapshot</b> of the iBuyPower list. That means:</p>
+<ul>
+  <li>Hand-deletions in Outlook from now on conflict with them, which is why the guide asks her to stop.</li>
+  <li>When you eventually write the clean list back, re-export Outlook first. Load the new export with her clean CSV in two-file mode, with "between files only" ticked. The <b>Only in "new export"</b> file is everything she added since today. Add those too.</li>
+  <li>The write-back itself is unchanged: PST backup, CalDav Synchronizer paused on both the iBuyPower and the Dell, import into a new non-synced folder, a 5-contact round trip Outlook → Synology → iPhone, and a rehearsed restore. Only then do the switch-over.</li>
+</ul>
+
+<h3>4. If her Mac refuses a file</h3>
+<p>Bring it back to your Mac and ask Claude to run the converter on it. It prints only counts, never contact details:</p>
+<pre>node tools/convert-contacts.mjs "&lt;path to file&gt;"</pre>
+</section>
+
 </main>
 </body>
 </html>

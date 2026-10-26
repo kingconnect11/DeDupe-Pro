@@ -265,7 +265,33 @@ test('a semicolon-delimited export (European Outlook) is read too', () => {
   assert.equal(r.contacts[0].notes, 'line 1\nline; 2');
 });
 test('a CSV with no name/email/phone columns is rejected with a clear message', () => {
-  assert.throws(() => E.parseContactFile('Date,Amount,Memo\n2026-01-01,3,x\n', 'x'), /Couldn't find name, email or phone columns/);
+  assert.throws(() => E.parseContactFile('Date,Amount,Memo\n2026-01-01,3,x\n', 'x'), /Couldn't find a header row/);
+});
+
+test('a file with NO header row is rejected, and the error never contains cell contents', () => {
+  const t = 'Jane Doe,jane@doe.example,Mobile,415-555-0199,Seeing Dr Smith\r\nJohn Roe,john@roe.example,,415-555-0100,x\r\n';
+  let err;
+  try { E.parseContactFile(t, 'nohdr'); } catch (e) { err = e; }
+  assert.ok(err, 'should throw');
+  for (const secret of ['Jane', 'jane@', '555-0199', 'Smith']) assert.ok(!err.message.includes(secret), 'message leaks ' + secret);
+  assert.match(err.message, /no header row/);
+});
+test('rows that do not line up with the header, unclosed quotes and Excel damage are counted', () => {
+  const t = 'First Name,Last Name,E-mail Address,Mobile Phone,Notes\r\nA,B,a@x.com,4.15556E+09,ok\r\nSmith, Jr,C,c@x.com,#NAME?,x\r\nD,E,d@x.com,1,"unclosed\r\nF,G,f@x.com,2,y\r\n';
+  const m = E.parseContactFile(t, 'bad').mapping;
+  assert.equal(m.raggedRows, 1);
+  assert.equal(m.unterminatedQuote, true);
+  assert.equal(m.excelDamage, 2);
+});
+test('a note containing BEGIN:VCARD does not turn a CSV into a vCard', () => {
+  const t = 'First Name,Last Name,Notes\r\nA,B,"pasted:\r\nBEGIN:VCARD\r\nFN:X\r\nEND:VCARD"\r\nC,D,z\r\n';
+  const r = E.parseContactFile(t, 'v');
+  assert.equal(r.format, 'csv');
+  assert.equal(r.contacts.length, 2);
+});
+test('truncation detector catches any shared cut-off length, e.g. 1024', () => {
+  const many = Array.from({ length: 40 }, (_, i) => ({ notes: String(i).padEnd(1024, 'x') }));
+  assert.ok(E.suspectTruncatedNotes([...many, { notes: 'short' }, { notes: 'y'.repeat(700) }]) >= 40);
 });
 
 console.log('Other export formats');

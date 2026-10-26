@@ -539,7 +539,7 @@ textarea.form-input { resize: vertical; min-height: 140px; font-size: 0.95em; li
             <button class="btn" onclick="openBrowse('after')">&#x1F4D6; Browse the cleaned list</button>
             <button class="btn btn-ghost" onclick="startOver()">&#x21A9; Start Over</button>
           </div>
-          <div class="notice" style="text-align:left"><b>Importing into Outlook safely:</b> Outlook contacts sync to every phone and computer. Never import the clean file over the live Contacts folder — that doubles every contact or misses the merges, everywhere. Instead: (1) back up the .pst; (2) create a <em>new, empty</em> contacts folder that is <em>not</em> synced; (3) File → Open &amp; Export → Import/Export → Import from another program or file → Comma Separated Values → choose the clean .csv → import into that new folder; (4) check a few contacts with long notes; (5) only then swap it in for the synced folder. Don't open the .csv in Excel first — Excel changes dates, phone numbers, and accents. Synology / iPhone / Mac use the .vcf instead.</div>
+          <div class="notice" style="text-align:left"><b>Importing into Outlook safely:</b> Outlook contacts sync to every phone and computer. Never import the clean file over the live Contacts folder — that doubles every contact or misses the merges, everywhere. Instead: (1) back up the .pst; (2) create a <em>new, empty</em> contacts folder that is <em>not</em> synced; (3) File → Open &amp; Export → Import/Export → Import from another program or file → Comma Separated Values → choose the clean .csv → import into that new folder; (4) check a few contacts with long notes; (5) don't replace the synced folder until a few test contacts have made the full trip Outlook → Synology → iPhone and a restore from the .pst backup has been practised. Pause CalDav Synchronizer on <em>both</em> the iBuyPower and the Dell while you work. Don't open the .csv in Excel first — Excel changes dates, phone numbers, and accents. Synology / iPhone / Mac use the .vcf instead.</div>
         </div>
       </div>
     </section>
@@ -895,7 +895,7 @@ function calculateConfidence(c1, c2) {
     else if (familyShared && (k1.given.length === 0 || k2.given.length === 0)) { nameScore = 25; nameFactor = 'Last name match'; nameRelated = true; }
     else if (familyShared && k1.given[0] && k2.given[0] && k1.given[0][0] === k2.given[0][0]) { nameScore = 25; nameFactor = 'Initial + last name'; nameRelated = true; }
     else if (soundexFamily && givenShared) { nameScore = 30; nameFactor = 'Phonetic last name + first name'; nameRelated = true; }
-    // "Schuman, Allan" vs "Schuman, Lynne" — same household, NOT a duplicate. Stays under 50 even with a shared phone.
+    // "Smith, Alan" vs "Smith, Lynn" — same household, NOT a duplicate. Stays under 50 even with a shared phone.
     else if (shared.length === 1) { nameScore = 8; nameFactor = 'Names share one word'; nameRelated = true; }
     else if (familyShared) { nameScore = 5; nameFactor = 'Last name only'; nameRelated = true; }
   } else {
@@ -1123,7 +1123,7 @@ function mergeContacts(contacts, overrides) {
     for (const p of photoCard.props) if (p.name === 'X-IMAGEHASH' || p.name === 'X-IMAGETYPE') out.push({ group: '', name: p.name, params: p.params, value: p.value });
   }
 
-  // Alternate names that carry different words ("Handyman, Al Holmes" vs "Holmes, Al") are information too.
+  // Alternate names that carry different words ("Plumber, Bob Smith" vs "Smith, Bob") are information too.
   const chosenTokens = new Set(canonicalTokens(nameTokens(chosenName)));
   const otherNames = [];
   for (const v of nameVariants(contacts)) {
@@ -1363,6 +1363,7 @@ function parseCSV(text, delim) {
     } else f += ch;
   }
   if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  rows.unterminatedQuote = q;
   return rows;
 }
 
@@ -1379,7 +1380,7 @@ function detectDelimiter(text) {
   return tabs > commas && tabs > semis ? '\t' : semis > commas ? ';' : ',';
 }
 
-function looksLikeVCard(text) { return /^\s*BEGIN:VCARD/im.test(text.slice(0, 4096)); }
+function looksLikeVCard(text) { return /^\s*BEGIN:VCARD/i.test(text.replace(/^\uFEFF/, '').slice(0, 200)); }
 
 // ── Column recognition ───────────────────────────────────────────
 //  Any contacts spreadsheet is mapped onto Outlook's own column names: exact Outlook names first, then
@@ -1453,11 +1454,15 @@ function mapHeader(header) {
     names[i] = String(h).trim() || `\u0002col${i + 1}`;
   });
   const native = !aliasUsed && !slots.length && taken.size >= 5 && (taken.has('First Name') || taken.has('Last Name'));
-  return { names, slots, native, recognised, taken };
+  return { names, slots, native, recognised, taken, dataLike: rowLooksLikeData(header.map(x => String(x ?? ''))) };
 }
+
+/** A real header row never contains an email address or a phone number. */
+function rowLooksLikeData(row) { return row.some(v => /@/.test(v) || /\d[\d\s().-]{6,}\d/.test(v)); }
 
 /** Does this header row describe contacts at all? (any name, email or phone column) */
 function headerLooksLikeContacts(m) {
+  if (m.dataLike) return false;
   const t = m.taken;
   return t.has('First Name') || t.has('Last Name') || t.has(FULLNAME_COL) || t.has('Company') ||
     [...t].some(x => /E-mail|Phone|Mobile/.test(x)) || m.slots.some(s => s.kind === 'e-mail' || s.kind === 'phone');
@@ -1516,7 +1521,9 @@ function parseContactFile(text, label) {
 
 /** Shared by CSV text and spreadsheet (xlsx) input: rows[0..] are arrays of cell strings. */
 function parseContactRows(rows, label, delimiter) {
+  const unterminated = !!rows.unterminatedQuote;
   rows = rows.map(r => r.map(v => (v == null ? '' : String(v))));
+  rows.unterminatedQuote = unterminated;
   if (!rows.length) throw new Error('The file is empty');
   // The header is normally the first row, but some exports put a title line above it.
   let h = 0, m = mapHeader(rows[0]);
@@ -1525,11 +1532,17 @@ function parseContactRows(rows, label, delimiter) {
     if (headerLooksLikeContacts(mk)) { h = k; m = mk; }
   }
   if (!headerLooksLikeContacts(m)) {
-    const cols = rows[0].slice(0, 8).map(x => `"${String(x).slice(0, 30)}"`).join(', ');
-    throw new Error(`Couldn't find name, email or phone columns in this file. Its first columns are: ${cols}. Export from Outlook with File → Open & Export → Import/Export → Export to a file → Comma Separated Values → Contacts.`);
+    // The message never includes cell contents (it may be printed somewhere an AI can read it).
+    const err = new Error(`Couldn't find a header row with name, email or phone columns${rowLooksLikeData(rows[0]) ? ' — the first row looks like contact data, so the file seems to have no header row' : ''}. Export from Outlook with File → Open & Export → Import/Export → Export to a file → Comma Separated Values → Contacts.`);
+    err.firstRow = rows[0];
+    throw err;
   }
   const header = rows[h].map(x => String(x).trim());
   const dataRows = rows.slice(h + 1).filter(r => r.some(v => v.trim() !== ''));
+  // Damage checks: rows that don't line up with the header, an unclosed quote, and Excel mangling.
+  const ragged = dataRows.filter(r => r.length !== header.length).length;
+  let excelDamage = 0;
+  for (const r of dataRows) for (const v of r) if (/^[+-]?\d+(\.\d+)?E\+\d+$/i.test(v.trim()) || /^#(NAME\?|NULL!|VALUE!|REF!|N\/A|DIV\/0!|NUM!)/.test(v.trim())) excelDamage++;
   const contacts = parseOutlookRows(header, dataRows, label, m);
   return { format: 'csv', header, delimiter: delimiter || ',', contacts, mapping: {
     native: m.native, columns: header.length, recognised: m.recognised,
@@ -1539,6 +1552,7 @@ function parseContactRows(rows, label, delimiter) {
     hasEmail: [...m.taken].some(x => /E-mail/.test(x)) || m.slots.some(s => s.kind === 'e-mail'),
     hasPhone: [...m.taken].some(x => /Phone|Mobile/.test(x)) || m.slots.some(s => s.kind === 'phone'),
     hasNotes: m.taken.has('Notes'),
+    raggedRows: ragged, unterminatedQuote: !!rows.unterminatedQuote, excelDamage, headerRow: h + 1,
   } };
 }
 
@@ -1617,10 +1631,13 @@ function parseOutlookRows(header, rows, label, mapping) {
  * notes are exactly 255 long, the export itself was probably truncated before we ever saw it.
  */
 function suspectTruncatedNotes(contacts) {
+  // A cut-off export makes many long notes share one exact length (255, 1024, 32767…).
   const len = new Map();
-  for (const c of contacts) if (c.notes) { const l = noteCharCount(c.notes); len.set(l, (len.get(l) || 0) + 1); }
-  const at = len.get(255) || 0, near = Math.max(len.get(254) || 0, len.get(256) || 0, 1);
-  return at >= 5 && at >= near * 4 ? at : 0;
+  for (const c of contacts) if (c.notes) { const l = noteCharCount(c.notes); if (l >= 200) len.set(l, (len.get(l) || 0) + 1); }
+  let worst = 0, at = 0;
+  for (const [l, n] of len) { const near = Math.max(len.get(l - 1) || 0, len.get(l + 1) || 0, 1); if (n >= 5 && n >= near * 4 && n > worst) { worst = n; at = l; } }
+  suspectTruncatedNotes.length_ = at;
+  return worst;
 }
 
 // ── Outlook CSV: export ──────────────────────────────────────────
@@ -1879,7 +1896,7 @@ function handleFile(file, n) {
         encoding = decoded.encoding;
         parsed = parseContactFile(decoded.text, label);
       }
-    } catch (err) { console.error(err); alert('Could not read that file.\n\n' + err.message); return; }
+    } catch (err) { alert('Could not read that file.\n\n' + err.message + (err.firstRow ? '\n\nFirst row of the file: ' + err.firstRow.slice(0, 6).map(x => String(x).slice(0, 25)).join(' | ') : '')); return; }
     const contacts = parsed.contacts;
     if (!contacts.length) { showToast('No contacts found in that file', 'error'); return; }
     const empties = contacts.filter(c => c.empty).length;
@@ -1901,6 +1918,11 @@ function handleFile(file, n) {
       text += `\n${mp.recognised} of ${mp.columns} columns recognised${mp.extras.length ? ` · ${mp.extras.length} kept as extra fields` : ''}`;
       const missing = [!mp.hasEmail && 'email', !mp.hasPhone && 'phone', !mp.hasNotes && 'notes'].filter(Boolean);
       if (missing.length) text += ` · ⚠ no ${missing.join(' / ')} column found`;
+      const probs = [];
+      if (mp.raggedRows) probs.push(`${mp.raggedRows} row(s) don't line up with the column headings (a stray comma or quote) — those contacts may have values in the wrong fields`);
+      if (mp.unterminatedQuote) probs.push('the file ends inside an unclosed quote — the last contact(s) may have been swallowed');
+      if (mp.excelDamage) probs.push(`${mp.excelDamage} cell(s) look damaged by Excel (numbers like 4.15556E+09 or #NAME?) — re-export from Outlook and don't open the file in Excel`);
+      if (probs.length) setTimeout(() => alert('Check this file before relying on it:\n\n• ' + probs.join('\n• ')), 150);
     }
     info.textContent = text;
     info.style.whiteSpace = 'pre-line';
@@ -1909,7 +1931,7 @@ function handleFile(file, n) {
     checkReady();
     showToast(`Loaded ${(contacts.length - empties).toLocaleString()} contacts from ${file.name}`, 'success');
     const cut = suspectTruncatedNotes(contacts);
-    if (cut) setTimeout(() => alert(`Warning: ${cut} notes in this file are exactly 255 characters long.\n\nThat usually means the program that exported the file cut the notes short — the missing text was never in the file. Compare one long note against Outlook before relying on this export.`), 100);
+    if (cut) setTimeout(() => alert(`Warning: ${cut} notes in this file are exactly ${suspectTruncatedNotes.length_} characters long.\n\nThat usually means the program that exported the file cut the notes short — the missing text was never in the file. Compare one long note against Outlook before relying on this export.`), 100);
   };
   reader.onerror = () => showToast('Could not read that file', 'error');
   reader.readAsArrayBuffer(file);

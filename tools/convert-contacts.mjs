@@ -27,6 +27,7 @@ const E = new Function(src + `
            writeOutlookCSV, encodeOutlookCSV, noteCharCount, normalizeEmail, normalizePhone, suspectTruncatedNotes, parseCSV };`)();
 
 const args = process.argv.slice(2);
+const debug = args.includes('--debug'); if (debug) args.splice(args.indexOf('--debug'), 1);
 const outIdx = args.indexOf('--out-dir');
 const outDirArg = outIdx >= 0 ? args.splice(outIdx, 2)[1] : null;
 const input = args[0];
@@ -76,7 +77,10 @@ for ws in wb.worksheets:
     throw new Error(`This is a .${kind} file, which isn't a contacts export. Export the Contacts folder from Outlook as Comma Separated Values.`);
   }
 } catch (err) {
-  console.error('FAILED: ' + err.message);
+  // Only messages this tool writes itself are shown; anything else could quote file contents.
+  const SAFE = /^(Couldn't find a header row|The file is empty|The spreadsheet is empty|readpst|Old \.xls|No contacts found in the \.pst|This is a \.)/;
+  if (debug) console.error(err);
+  console.error('FAILED: ' + (SAFE.test(err.message) ? err.message : 'could not read this file. Details are hidden so no contact data is printed; run it yourself in Terminal with --debug to see them.'));
   process.exit(1);
 }
 
@@ -118,7 +122,7 @@ live.forEach((c, i) => {
   const lower = ws(r), digits = r.replace(/\D/g, '');
   for (const e of c.emails) if (!lower.includes(ws(e))) csvMissing++;
   for (const p of c.phones) { const d = E.normalizePhone(p); if (d ? !digits.includes(d) : !lower.includes(ws(p).trim())) csvMissing++; }
-  if (c.notes && !r.replace(/\r\n/g, '\n').includes(c.notes.replace(/\r\n?/g, '\n'))) notesMissing++;
+  if (c.notes && !r.replace(/\r\n?/g, '\n').includes(c.notes.replace(/\r\n?/g, '\n'))) notesMissing++;
 });
 
 const line = (k, v) => console.log(`  ${k.padEnd(28)} ${v}`);
@@ -127,9 +131,14 @@ line('Detected', `${how}${encoding && encoding !== 'xlsx' ? ', encoding ' + enco
 if (parsed.mapping) {
   const m = parsed.mapping;
   line('Columns', `${m.columns} total, ${m.recognised} recognised${m.native ? ' (standard Outlook columns)' : ''}`);
-  if (m.mapped.length) line('Renamed columns', m.mapped.slice(0, 12).join('; ') + (m.mapped.length > 12 ? ` … +${m.mapped.length - 12}` : ''));
+  // Only Outlook's own column names are printed — never the file's raw header text.
+  if (m.mapped.length) line('Matched to Outlook columns', [...new Set(m.mapped.map(x => x.split(' → ')[1]))].join('; '));
   if (m.slotColumns) line('Numbered columns', `${m.slotColumns} (e.g. "Phone 1 - Value") turned into fields`);
-  if (m.extras.length) line('Kept as extra fields', m.extras.slice(0, 12).join('; ') + (m.extras.length > 12 ? ` … +${m.extras.length - 12}` : ''));
+  if (m.extras.length) line('Kept as extra fields', `${m.extras.length} column(s) with no Outlook equivalent`);
+  if (m.headerRow > 1) line('Header row', `row ${m.headerRow} (rows above it skipped)`);
+  if (m.raggedRows) line('WARNING', `${m.raggedRows} row(s) don't line up with the headings (stray comma/quote) — values may be in the wrong fields`);
+  if (m.unterminatedQuote) line('WARNING', 'file ends inside an unclosed quote — the last contact(s) may have been swallowed');
+  if (m.excelDamage) line('WARNING', `${m.excelDamage} cell(s) look damaged by Excel (E+ numbers or #NAME?) — re-export from Outlook`);
   const missing = [!m.hasEmail && 'email', !m.hasPhone && 'phone', !m.hasNotes && 'notes'].filter(Boolean);
   if (missing.length) line('WARNING', `no ${missing.join(' / ')} column found — check the export`);
 }
@@ -139,11 +148,11 @@ line('With email / phone / notes', `${before.withEmail} / ${before.withPhone} / 
 line('Total emails / phones / addr', `${before.emails} / ${before.phones} / ${before.addresses}`);
 line('Total note characters', before.noteChars);
 const cut = E.suspectTruncatedNotes(live);
-if (cut) line('WARNING', `${cut} notes are exactly 255 characters — the export may have cut notes short`);
+if (cut) line('WARNING', `${cut} notes are exactly ${E.suspectTruncatedNotes.length_} characters — the export may have cut notes short`);
 const ok1 = after.contacts === before.contacts && after.noteChars === before.noteChars && after.emails === before.emails && after.phones === before.phones && after.addresses === before.addresses;
 const ok2 = afterCsv.contacts === before.contacts && csvRows.length === live.length && csvMissing === 0 && notesMissing === 0;
 console.log(`Output: ${vcfPath}`);
 line('Re-read check', ok1 ? 'OK — same contacts, emails, phones, addresses and note characters' : `MISMATCH ${JSON.stringify({ before, after })}`);
 console.log(`Output: ${csvPath}`);
-line('Re-read check', ok2 ? `OK — ${csvEnc.encoding}; every email, phone and note is in the file (values with no free Outlook column were added to Notes)` : `PROBLEM — ${csvMissing} email/phone values and ${notesMissing} notes not found in the CSV; use the .vcf instead`);
+line('Re-read check', ok2 ? `OK — ${csvEnc.encoding}; every email, phone and note is in the file (values with no free Outlook column were added to Notes)` : `PROBLEM — ${csvMissing} email/phone values and ${notesMissing} notes not found in the CSV. Load the .vcf into DeDupe Pro instead; don't import this CSV into Outlook`);
 process.exit(ok1 && ok2 ? 0 : 3);

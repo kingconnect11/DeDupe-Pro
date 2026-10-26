@@ -5,3 +5,11 @@
 # Contains machine PINs, account names and network details — never commit or deploy
 Phyllis_Contact_Dedup_Rebuild_Handoff.md
 __pycache__/
+
+# Contact exports and converter output must never be committed
+*.csv
+*.vcf
+*.xlsx
+*.xls
+*.pst
+!tests/fixtures/*

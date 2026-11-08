@@ -1,0 +1,7 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Alice Multi
+N:Multi;Alice;;;
+EMAIL;TYPE=HOME:alice@example.com
+NOTE:Line one\nLine two\nLine three with\, comma and\; semicolon and \\ backslash\nLine four
+END:VCARD

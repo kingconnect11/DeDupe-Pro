@@ -1,0 +1,22 @@
+# Deploy ONLY the static runtime (index.html + engine.js).
+# Tests, docs, tooling and anything that could carry private contact
+# data must never reach the deployment.
+
+# tests and fixtures
+tests/
+
+# docs / handoff notes (may reference private contact data)
+*.md
+
+# agent/tooling metadata
+.claude/
+
+# node tooling (pure static site — no build step)
+package.json
+package-lock.json
+node_modules/
+
+# vcs / hosting metadata (Vercel already skips these; belt and braces)
+.git/
+.gitignore
+.vercel/

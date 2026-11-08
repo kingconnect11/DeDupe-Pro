@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Doe\, John "Johnny" \\ Esq.
+N:Doe;John;;;
+ORG:Acme\, Inc.;R\;D Dept\; West
+TITLE:Senior VP\, R\&D
+NOTE:Multi\\backslash\ncomma\, semicolon\; colon: newline\nnext line 100% done
+ADR;TYPE=HOME:;;123 Main St\, Apt\; 4;Springfield;IL;62704;USA
+END:VCARD

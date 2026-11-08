@@ -190,6 +190,7 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 40px;
+  overflow-y: auto;
 }
 
 .upload-container {
@@ -215,7 +216,7 @@ html, body {
 .upload-hero p {
   font-size: 16px;
   color: var(--text-secondary);
-  max-width: 500px;
+  max-width: 560px;
   margin: 0 auto;
   line-height: 1.6;
 }
@@ -274,12 +275,10 @@ html, body {
 }
 
 .drop-zone-versus {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-muted);
   padding: 0 20px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
 }
 
 .upload-actions {
@@ -303,6 +302,8 @@ html, body {
   gap: 16px;
   color: var(--text-secondary);
   font-size: 13px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .settings-row input[type="range"] {
@@ -312,6 +313,13 @@ html, body {
 
 .settings-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .settings-row input[type="checkbox"] { accent-color: var(--accent); }
+
+.upload-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 480px;
+  line-height: 1.5;
+}
 
 /* ── Screen: Review ───────────────────── */
 .review-screen {
@@ -474,6 +482,7 @@ html, body {
   color: var(--text-muted);
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .group-meta span { display: flex; align-items: center; gap: 4px; }
@@ -482,6 +491,7 @@ html, body {
   display: flex;
   gap: 6px;
   margin-right: 12px;
+  flex-wrap: wrap;
 }
 
 .warning-badge {
@@ -491,6 +501,15 @@ html, body {
   font-weight: 500;
   background: var(--warning-dim);
   color: var(--warning);
+}
+
+.cross-file-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--info-dim);
+  color: var(--info);
 }
 
 .group-actions {
@@ -519,6 +538,7 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
+  min-width: 0;
 }
 
 .contact-card-header {
@@ -552,8 +572,24 @@ html, body {
 .contact-source {
   font-size: 11px;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.source-badge {
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.source-master { background: var(--accent-glow); color: var(--accent-light); }
+.source-iphone { background: var(--info-dim); color: var(--info); }
+.source-other { background: var(--bg-hover); color: var(--text-muted); }
 
 .contact-fields {
   display: flex;
@@ -577,8 +613,75 @@ html, body {
   margin-top: 2px;
 }
 
-.field-value { color: var(--text-secondary); word-break: break-all; }
+.field-value { color: var(--text-secondary); word-break: break-word; }
 .field-value.highlight { color: var(--accent-light); }
+
+/* ── Notes (multi-line, clamped) ──────── */
+.note-content { flex: 1; min-width: 0; }
+
+.note-block { margin-bottom: 8px; }
+.note-block:last-child { margin-bottom: 0; }
+
+.note-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.note-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.note-text.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.note-toggle {
+  background: none;
+  border: none;
+  color: var(--accent-light);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 0 0;
+}
+
+.note-toggle:hover { text-decoration: underline; }
+
+.merged-notes { margin-top: 12px; }
+
+/* ── Note Integrity Badge ─────────────── */
+.integrity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.integrity-badge.ok { background: var(--success-dim); color: var(--success); }
+.integrity-badge.bad { background: var(--danger-dim); color: var(--danger); }
+
+.merge-preview h4 .integrity-badge { margin-left: auto; }
 
 .merge-preview {
   margin-top: 16px;
@@ -595,6 +698,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .match-factors {
@@ -735,16 +839,31 @@ textarea.form-input {
   min-height: 80px;
 }
 
+textarea.form-input.notes-editor {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  min-height: 150px;
+  white-space: pre-wrap;
+}
+
+.form-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
 /* ── Screen: Results ──────────────────── */
 .results-screen {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px;
+  overflow-y: auto;
 }
 
 .results-container {
-  max-width: 700px;
+  max-width: 760px;
   width: 100%;
   text-align: center;
 }
@@ -772,7 +891,7 @@ textarea.form-input {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
 }
 
 .result-stat {
@@ -794,10 +913,81 @@ textarea.form-input {
   margin-top: 4px;
 }
 
+/* ── Note Integrity Panel (Results) ───── */
+.integrity-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 36px;
+  text-align: left;
+}
+
+.integrity-panel.ok { border-color: var(--success); }
+.integrity-panel.bad { border-color: var(--danger); }
+
+.integrity-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.integrity-panel.ok .integrity-head { color: var(--success); }
+.integrity-panel.bad .integrity-head { color: var(--danger); }
+
+.integrity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.integrity-cell {
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+}
+
+.integrity-cell-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.integrity-cell-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.loss-list {
+  margin-top: 14px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loss-item {
+  background: var(--danger-dim);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--danger);
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-word;
+}
+
 .results-actions {
   display: flex;
   gap: 12px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* ── Progress Bar ─────────────────────── */
@@ -839,6 +1029,11 @@ textarea.form-input {
   width: 0%;
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* ── Toast ─────────────────────────────── */
 .toast-container {
   position: fixed;
@@ -861,6 +1056,7 @@ textarea.form-input {
   display: flex;
   align-items: center;
   gap: 8px;
+  max-width: 420px;
 }
 
 .toast.success { border-left: 3px solid var(--success); }
@@ -881,6 +1077,7 @@ textarea.form-input {
   border-top: 1px solid var(--border);
   background: var(--bg-secondary);
   flex-shrink: 0;
+  gap: 12px;
 }
 
 .review-progress {
@@ -948,6 +1145,7 @@ textarea.form-input {
   .drop-zone-versus { display: none; }
   .contacts-comparison { grid-template-columns: 1fr !important; }
   .results-stats { grid-template-columns: repeat(2, 1fr); }
+  .integrity-grid { grid-template-columns: repeat(2, 1fr); }
   .confidence-tabs { flex-wrap: wrap; }
   .header-stats { display: none; }
 }
@@ -989,21 +1187,21 @@ textarea.form-input {
         <div class="upload-container">
           <div class="upload-hero">
             <h1>DeDupe Your Contacts</h1>
-            <p>Drop two vCard files and let smart matching find duplicates using names, emails, phones, nicknames, and phonetic similarity.</p>
+            <p>Drop your master file from Synology Contacts &mdash; and optionally an iPhone/iCloud export &mdash; then review every merge with a built-in note-integrity check. Nothing is written anywhere until you export.</p>
           </div>
           <div class="drop-zones">
             <div class="drop-zone" id="dropZone1" onclick="document.getElementById('fileInput1').click()">
               <span class="drop-zone-icon">&#x1F4C1;</span>
-              <div class="drop-zone-title">First Contact File</div>
-              <div class="drop-zone-sub">Drop .vcf file or click to browse</div>
+              <div class="drop-zone-title">Master Contact File (Synology)</div>
+              <div class="drop-zone-sub">Drop .vcf / .vcard file or click to browse</div>
               <div class="drop-zone-info hidden" id="fileInfo1"></div>
               <input type="file" id="fileInput1" accept=".vcf,.vcard" style="display:none">
             </div>
-            <div class="drop-zone-versus">vs</div>
+            <div class="drop-zone-versus">+</div>
             <div class="drop-zone" id="dropZone2" onclick="document.getElementById('fileInput2').click()">
               <span class="drop-zone-icon">&#x1F4C2;</span>
-              <div class="drop-zone-title">Second Contact File</div>
-              <div class="drop-zone-sub">Drop .vcf file or click to browse</div>
+              <div class="drop-zone-title">Second File (optional &mdash; iPhone/iCloud export)</div>
+              <div class="drop-zone-sub">Drop .vcf / .vcard file or click to browse</div>
               <div class="drop-zone-info hidden" id="fileInfo2"></div>
               <input type="file" id="fileInput2" accept=".vcf,.vcard" style="display:none">
             </div>
@@ -1014,12 +1212,13 @@ textarea.form-input {
             </button>
             <div class="settings-row">
               <span>Threshold:</span>
-              <input type="range" id="thresholdSlider" min="30" max="95" value="50" oninput="this.nextElementSibling.textContent = this.value + '%'">
-              <span>50%</span>
-              <label>
-                <input type="checkbox" id="autoMerge"> Auto-merge above 95%
+              <input type="range" id="thresholdSlider" min="30" max="95" value="50" oninput="document.getElementById('thresholdValue').textContent = this.value + '%'">
+              <span id="thresholdValue">50%</span>
+              <label title="Only groups the engine flags as autoMergeSafe are approved automatically">
+                <input type="checkbox" id="autoMerge"> Auto-approve safe merges only
               </label>
             </div>
+            <div class="upload-note">&#x1F4DD; Multi-line notes are never truncated here: every contact card shows its notes, and every merge preview verifies that 100% of note content survives before you approve it.</div>
           </div>
         </div>
       </div>
@@ -1037,7 +1236,8 @@ textarea.form-input {
               <span>&#x1F50D;</span>
               <input type="text" id="searchInput" placeholder="Search contacts..." oninput="filterGroups()">
             </div>
-            <button class="btn btn-sm btn-success" onclick="approveAllVisible()">&#x2714; Approve Visible</button>
+            <button class="btn btn-sm" onclick="downloadMergePlan()" title="Download the audit log for the current merge plan &mdash; a dry run, nothing is written until you export">&#x1F4DD; Download Merge Plan</button>
+            <button class="btn btn-sm btn-success" onclick="approveAllVisible()" title="Approve all groups in the current filter (A)">&#x2714; Approve Visible</button>
           </div>
         </div>
         <div class="review-body" id="reviewBody">
@@ -1055,7 +1255,7 @@ textarea.form-input {
             <span id="pageInfo">Page 1</span>
             <button class="btn btn-sm" id="btnNextPage" onclick="changePage(1)" disabled>Next &#x25B6;</button>
           </div>
-          <button class="btn btn-success" id="btnExport" onclick="showExport()">
+          <button class="btn btn-success" id="btnExport" onclick="showExport()" title="Build the merged export (Ctrl+E)">
             &#x1F4BE; Export Merged Contacts
           </button>
         </div>
@@ -1070,10 +1270,12 @@ textarea.form-input {
           <h1>Merge Complete</h1>
           <p id="resultsMessage"></p>
           <div class="results-stats" id="resultsStats"></div>
+          <div class="integrity-panel ok" id="noteIntegrityPanel"></div>
           <div class="results-actions">
             <button class="btn btn-primary" onclick="downloadVCard()">&#x1F4BE; Download vCard</button>
             <button class="btn" onclick="downloadCSV()">&#x1F4CA; Download CSV</button>
-            <button class="btn" onclick="downloadJSON()">&#x1F4DD; Download JSON</button>
+            <button class="btn" onclick="downloadJSON()">&#x1F4C4; Download JSON</button>
+            <button class="btn" onclick="downloadAuditLog()">&#x1F4DD; Download Audit Log</button>
             <button class="btn btn-ghost" onclick="startOver()">&#x21A9; Start Over</button>
           </div>
         </div>
@@ -1084,565 +1286,122 @@ textarea.form-input {
 
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="engine.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────
-//  CONTACT DEDUPLICATOR v6 - Core Engine
+//  DeDupe Pro — UI layer only.
+//  All parsing / matching / merging / exporting is delegated to
+//  window.DedupeEngine (engine.js). This file never mutates contact
+//  content itself beyond user edits in the edit modal.
 // ─────────────────────────────────────────────────────────────────
 
 // ── State ────────────────────────────────────────────────────────
 const state = {
-  file1Contacts: [],
-  file2Contacts: [],
-  allContacts: [],
-  groups: [],           // { contacts, confidence, factors, warnings, merged, status }
+  masterContacts: [],   // file 1 — tagged _source: 'master'
+  iphoneContacts: [],   // file 2 — tagged _source: 'iphone'
+  allContacts: [],      // master + iphone
+  groups: [],           // from DedupeEngine.findDuplicateGroups
   filteredGroups: [],
-  uniqueContacts: [],   // contacts not in any group
+  uniqueContacts: [],
   undoStack: [],
+  expandedGroups: new Set(),
   currentTab: 'all',
   currentPage: 0,
   pageSize: 80,
   searchQuery: '',
   threshold: 50,
   autoMerge: false,
+  exportResult: null,   // cached { contacts, vcfText } from buildExport
 };
 
-// ── Nickname Map ─────────────────────────────────────────────────
-const NICKNAMES = {
-  robert: ['bob','rob','robbie','bobby','bert'],
-  william: ['will','bill','billy','willy','liam'],
-  james: ['jim','jimmy','jamie','jem'],
-  john: ['jack','johnny','jon'],
-  richard: ['rick','rich','dick','ricky'],
-  charles: ['charlie','chuck','chas'],
-  thomas: ['tom','tommy','thom'],
-  joseph: ['joe','joey','jo'],
-  edward: ['ed','eddie','ted','teddy','ned'],
-  michael: ['mike','mikey','mick'],
-  david: ['dave','davy'],
-  daniel: ['dan','danny'],
-  matthew: ['matt','matty'],
-  andrew: ['andy','drew'],
-  steven: ['steve','stevie'],
-  stephen: ['steve','stevie'],
-  christopher: ['chris','kit','topher'],
-  nicholas: ['nick','nicky','nico'],
-  benjamin: ['ben','benny','benji'],
-  alexander: ['alex','xander','alec','sandy'],
-  elizabeth: ['liz','lizzy','beth','betty','eliza','libby','liza'],
-  jennifer: ['jen','jenny','jenn'],
-  katherine: ['kate','kathy','katie','cathy','kit'],
-  catherine: ['kate','kathy','katie','cathy','cat'],
-  margaret: ['maggie','meg','peggy','marge','madge','greta'],
-  patricia: ['pat','patty','trish','tricia'],
-  barbara: ['barb','barbie','babs'],
-  dorothy: ['dot','dottie','dolly'],
-  susan: ['sue','susie','suzy'],
-  jessica: ['jess','jessie'],
-  sarah: ['sally','sadie'],
-  rebecca: ['becca','becky','bec'],
-  samantha: ['sam','sammy'],
-  deborah: ['deb','debbie','debby'],
-  victoria: ['vicky','tori','vic'],
-  abigail: ['abby','gail'],
-  gabrielle: ['gabby','gabi'],
-  jacqueline: ['jackie','jac'],
-  penelope: ['penny','pen'],
-  theodore: ['theo','ted','teddy'],
-  timothy: ['tim','timmy'],
-  gregory: ['greg','gregg'],
-  lawrence: ['larry','lars'],
-  leonard: ['leo','len','lenny'],
-  raymond: ['ray'],
-  ronald: ['ron','ronnie'],
-  anthony: ['tony','ant'],
-  francis: ['frank','fran'],
-  phillip: ['phil'],
-  philip: ['phil'],
-  jonathan: ['jon','jonny','nathan'],
-  nathaniel: ['nate','nathan','nat'],
-  frederick: ['fred','freddy','fritz'],
-  gerald: ['gerry','jerry'],
-  harold: ['harry','hal'],
-  henrietta: ['hettie', 'etta'],
-  henry: ['harry','hank','hal'],
-  albert: ['al','bert','bertie'],
-  arthur: ['art','artie'],
-  walter: ['walt','wally'],
-  peter: ['pete','petey'],
-  patrick: ['pat','paddy','rick'],
-  kenneth: ['ken','kenny'],
-  donald: ['don','donny'],
-  samuel: ['sam','sammy'],
-  douglas: ['doug','dougie'],
-  eugene: ['gene'],
-  vincent: ['vince','vin','vinny'],
-  alexander: ['alex','al','xander'],
-  maximilian: ['max'],
-  yvonne: ['vonnie'],
-};
+const LARGE_FILE_BYTES = 100 * 1024 * 1024; // warn above 100 MB, still attempt
 
-// Build reverse lookup
-const nicknameToCanonical = {};
-for (const [canonical, nicks] of Object.entries(NICKNAMES)) {
-  nicknameToCanonical[canonical] = canonical;
-  for (const nick of nicks) {
-    if (!nicknameToCanonical[nick]) nicknameToCanonical[nick] = canonical;
-  }
+// ── Defensive value helpers ──────────────────────────────────────
+// emails/phones entries may be plain strings or { value, params } objects.
+function valOf(x) {
+  if (x == null) return '';
+  if (typeof x === 'object') return x.value != null ? String(x.value) : '';
+  return String(x);
 }
 
-// ── Soundex ──────────────────────────────────────────────────────
-function soundex(s) {
-  if (!s) return '';
-  s = s.toUpperCase().replace(/[^A-Z]/g, '');
-  if (!s) return '';
-  const map = {B:'1',F:'1',P:'1',V:'1',C:'2',G:'2',J:'2',K:'2',Q:'2',S:'2',X:'2',Z:'2',D:'3',T:'3',L:'4',M:'5',N:'5',R:'6'};
-  let result = s[0];
-  let lastCode = map[s[0]] || '';
-  for (let i = 1; i < s.length && result.length < 4; i++) {
-    const code = map[s[i]] || '';
-    if (code && code !== lastCode) { result += code; }
-    if (code) lastCode = code;
-    else lastCode = '';
-  }
-  return (result + '000').slice(0, 4);
+// Contact.notes is normally an array of full note strings, but a merged
+// contact may carry a single string instead — normalize to an array.
+function notesOf(c) {
+  if (!c) return [];
+  const n = c.notes;
+  if (Array.isArray(n)) return n.filter(v => v != null && v !== '').map(String);
+  if (typeof n === 'string' && n !== '') return [n];
+  return [];
 }
 
-// ── vCard Parser ─────────────────────────────────────────────────
-function parseVCards(text) {
-  const contacts = [];
-  const blocks = text.split(/(?=BEGIN:VCARD)/i);
-  for (const block of blocks) {
-    if (!/BEGIN:VCARD/i.test(block)) continue;
-    const contact = { raw: block, emails: [], phones: [], name: '', org: '', title: '', birthday: '', url: '', notes: '', photo: '' };
-    const lines = unfoldVCard(block).split(/\r?\n/);
-    for (const line of lines) {
-      const colonIdx = line.indexOf(':');
-      if (colonIdx < 0) continue;
-      const propPart = line.substring(0, colonIdx).toUpperCase();
-      const val = line.substring(colonIdx + 1).trim();
-      if (!val) continue;
-      const propName = propPart.split(';')[0];
-      if (propName === 'FN') {
-        contact.name = val;
-      } else if (propName === 'N') {
-        if (!contact.name) {
-          const parts = val.split(';');
-          contact.name = [parts[1] || '', parts[0] || ''].filter(Boolean).join(' ').trim();
-        }
-        contact._nField = val;
-      } else if (propName === 'EMAIL') {
-        contact.emails.push(val);
-      } else if (propName === 'TEL') {
-        contact.phones.push(val);
-      } else if (propName === 'ORG') {
-        contact.org = val.replace(/;/g, ', ');
-      } else if (propName === 'TITLE') {
-        contact.title = val;
-      } else if (propName === 'BDAY') {
-        contact.birthday = val;
-      } else if (propName === 'URL') {
-        contact.url = val;
-      } else if (propName === 'NOTE') {
-        contact.notes = val;
-      } else if (propName === 'PHOTO') {
-        contact.photo = val;
-      }
-    }
-    if (contact.name || contact.emails.length || contact.phones.length) {
-      contacts.push(contact);
-    }
-  }
-  return contacts;
+function notesCharCount(contacts) {
+  let total = 0;
+  for (const c of contacts) for (const n of notesOf(c)) total += n.length;
+  return total;
 }
 
-function unfoldVCard(text) {
-  return text.replace(/\r?\n[ \t]/g, '');
+function notesLineCount(contacts) {
+  let total = 0;
+  for (const c of contacts) for (const n of notesOf(c)) total += n.split('\n').length;
+  return total;
 }
 
-// ── Normalizers ──────────────────────────────────────────────────
-function normalizeName(name) {
-  if (!name) return '';
-  return name.toLowerCase()
-    .replace(/\b(mr|mrs|ms|dr|prof|jr|sr|ii|iii|iv|phd|md|esq)\b\.?/gi, '')
-    .replace(/[^a-z\s'-]/g, '')
-    .trim()
-    .replace(/\s+/g, ' ');
+function num(v) {
+  return (typeof v === 'number' && isFinite(v)) ? v : 0;
 }
 
-function canonicalNameParts(name) {
-  const n = normalizeName(name);
-  // Handle "Last, First" format
-  if (n.includes(',')) {
-    const [last, ...rest] = n.split(',').map(s => s.trim());
-    return [...rest.join(' ').split(/\s+/), last].filter(Boolean).sort();
-  }
-  return n.split(/\s+/).filter(Boolean).sort();
-}
-
-function normalizeEmail(email) {
-  if (!email) return '';
-  email = email.toLowerCase().trim();
-  const [localPart, domain] = email.split('@');
-  if (!domain) return email;
-  let d = domain === 'googlemail.com' ? 'gmail.com' : domain;
-  let local = localPart;
-  if (d === 'gmail.com') {
-    local = local.replace(/\./g, '').replace(/\+.*$/, '');
-  }
-  return local + '@' + d;
-}
-
-function normalizePhone(phone) {
-  if (!phone) return '';
-  const digits = phone.replace(/\D/g, '');
-  // Remove leading 1 if it's a US number (10 digits remaining)
-  if (digits.startsWith('1') && digits.length === 11) return digits.substring(1);
-  return digits;
-}
-
-function last7(phone) {
-  const d = normalizePhone(phone);
-  return d.length >= 7 ? d.slice(-7) : d;
-}
-
-// ── Match Confidence Calculator ──────────────────────────────────
-function calculateConfidence(c1, c2) {
-  let score = 0;
-  const factors = [];
-  const warnings = [];
-
-  // Email matching
-  const emails1 = c1.emails.map(normalizeEmail);
-  const emails2 = c2.emails.map(normalizeEmail);
-  const emailMatch = emails1.some(e => emails2.includes(e));
-  if (emailMatch) { score += 50; factors.push('Email match'); }
-
-  // Phone matching
-  const phones1 = c1.phones.map(last7);
-  const phones2 = c2.phones.map(last7);
-  const phoneMatch = phones1.some(p => p.length >= 7 && phones2.includes(p));
-  if (phoneMatch) { score += 40; factors.push('Phone match'); }
-
-  // Full phone match
-  const fullPhones1 = c1.phones.map(normalizePhone);
-  const fullPhones2 = c2.phones.map(normalizePhone);
-  if (fullPhones1.some(p => p.length >= 10 && fullPhones2.includes(p))) {
-    if (!phoneMatch) { score += 40; factors.push('Full phone match'); }
-  }
-
-  // Name matching
-  const parts1 = canonicalNameParts(c1.name);
-  const parts2 = canonicalNameParts(c2.name);
-
-  if (parts1.length && parts2.length) {
-    const name1 = parts1.join(' ');
-    const name2 = parts2.join(' ');
-
-    if (name1 === name2) {
-      score += 50;
-      factors.push('Exact name match');
-    } else {
-      // Nickname check - sort AFTER mapping to canonical names for proper comparison
-      const canonical1 = parts1.map(p => nicknameToCanonical[p] || p).sort();
-      const canonical2 = parts2.map(p => nicknameToCanonical[p] || p).sort();
-      if (canonical1.join(' ') === canonical2.join(' ')) {
-        score += 45;
-        factors.push('Nickname match');
-      } else {
-        // Soundex check
-        const sx1 = parts1.map(soundex).join('');
-        const sx2 = parts2.map(soundex).join('');
-        if (sx1 === sx2 && sx1) {
-          score += 35;
-          factors.push('Phonetic match');
-        } else {
-          // First initial + last name match
-          if (parts1.length >= 2 && parts2.length >= 2) {
-            const sorted1 = [...parts1].sort();
-            const sorted2 = [...parts2].sort();
-            const last1 = sorted1[sorted1.length - 1];
-            const last2 = sorted2[sorted2.length - 1];
-            if (last1 === last2 && sorted1[0][0] === sorted2[0][0]) {
-              score += 25;
-              factors.push('Initial + last name');
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Organization bonus
-  if (c1.org && c2.org) {
-    if (c1.org.toLowerCase() === c2.org.toLowerCase()) {
-      score += 10;
-      factors.push('Same organization');
-    } else {
-      warnings.push('Different organizations');
-    }
-  }
-
-  // Warnings
-  if (emailMatch && c1.emails.length && c2.emails.length) {
-    const domains1 = c1.emails.map(e => e.split('@')[1]).filter(Boolean);
-    const domains2 = c2.emails.map(e => e.split('@')[1]).filter(Boolean);
-    if (domains1.length && domains2.length && !domains1.some(d => domains2.includes(d))) {
-      warnings.push('Different email domains');
-    }
-  }
-
-  if (!emailMatch && !phoneMatch && score > 0) {
-    warnings.push('Name-only match');
-  }
-
-  return { score: Math.min(100, score), factors, warnings };
-}
-
-// ── Duplicate Finder (Bucketed O(n)) ─────────────────────────────
-function findDuplicateGroups(contacts, threshold) {
-  const emailBucket = {};
-  const phoneBucket = {};
-  const nameBucket = {};
-  const soundexBucket = {};
-
-  // Phase 1: Build buckets
-  contacts.forEach((c, i) => {
-    c._idx = i;
-    c.emails.forEach(e => {
-      const ne = normalizeEmail(e);
-      if (ne) { (emailBucket[ne] = emailBucket[ne] || []).push(i); }
-    });
-    c.phones.forEach(p => {
-      const l7 = last7(p);
-      if (l7.length >= 7) { (phoneBucket[l7] = phoneBucket[l7] || []).push(i); }
-    });
-    const parts = canonicalNameParts(c.name);
-    if (parts.length) {
-      const nameKey = parts.join('|');
-      (nameBucket[nameKey] = nameBucket[nameKey] || []).push(i);
-      // Nickname-expanded
-      const nickKey = parts.map(p => nicknameToCanonical[p] || p).sort().join('|');
-      if (nickKey !== nameKey) {
-        (nameBucket[nickKey] = nameBucket[nickKey] || []).push(i);
-      }
-      // Soundex
-      const sxKey = parts.map(soundex).join('|');
-      if (sxKey) { (soundexBucket[sxKey] = soundexBucket[sxKey] || []).push(i); }
-    }
+// Local fallback mirror of DedupeEngine.noteIntegrityReport, used only if
+// the engine call throws or returns an incomplete shape.
+function localIntegrity(beforeContacts, afterContacts) {
+  const agg = (arr) => ({
+    contacts: arr.length,
+    withNotes: arr.filter(c => notesOf(c).length > 0).length,
+    chars: notesCharCount(arr),
+    lines: notesLineCount(arr),
   });
-
-  // Phase 2: Candidate pairs
-  const candidatePairs = new Set();
-  function addPairs(bucket) {
-    for (const indices of Object.values(bucket)) {
-      if (indices.length < 2 || indices.length > 50) continue;
-      for (let a = 0; a < indices.length; a++) {
-        for (let b = a + 1; b < indices.length; b++) {
-          const key = indices[a] < indices[b] ? `${indices[a]}:${indices[b]}` : `${indices[b]}:${indices[a]}`;
-          candidatePairs.add(key);
-        }
-      }
-    }
-  }
-  addPairs(emailBucket);
-  addPairs(phoneBucket);
-  addPairs(nameBucket);
-  addPairs(soundexBucket);
-
-  // Phase 3: Evaluate pairs
-  const edges = [];
-  for (const pair of candidatePairs) {
-    const [a, b] = pair.split(':').map(Number);
-    const { score, factors, warnings } = calculateConfidence(contacts[a], contacts[b]);
-    if (score >= threshold) {
-      edges.push({ a, b, score, factors, warnings });
-    }
-  }
-
-  // Phase 4: BFS connected components
-  const adj = {};
-  const edgeData = {};
-  for (const e of edges) {
-    (adj[e.a] = adj[e.a] || []).push(e.b);
-    (adj[e.b] = adj[e.b] || []).push(e.a);
-    const key = Math.min(e.a, e.b) + ':' + Math.max(e.a, e.b);
-    if (!edgeData[key] || e.score > edgeData[key].score) {
-      edgeData[key] = e;
-    }
-  }
-
-  const visited = new Set();
-  const groups = [];
-  for (const startStr of Object.keys(adj)) {
-    const start = Number(startStr);
-    if (visited.has(start)) continue;
-    const queue = [start];
-    visited.add(start);
-    const component = [];
-    let bestScore = 0;
-    let allFactors = [];
-    let allWarnings = [];
-    while (queue.length) {
-      const node = queue.shift();
-      component.push(node);
-      for (const neighbor of (adj[node] || [])) {
-        if (!visited.has(neighbor)) {
-          visited.add(neighbor);
-          queue.push(neighbor);
-        }
-        const key = Math.min(node, neighbor) + ':' + Math.max(node, neighbor);
-        const ed = edgeData[key];
-        if (ed && ed.score > bestScore) {
-          bestScore = ed.score;
-          allFactors = ed.factors;
-          allWarnings = ed.warnings;
-        }
-      }
-    }
-    if (component.length >= 2) {
-      groups.push({
-        contacts: component.map(i => contacts[i]),
-        confidence: bestScore,
-        factors: allFactors,
-        warnings: allWarnings,
-        status: 'pending',
-        merged: null,
-      });
-    }
-  }
-
-  // Find unique contacts
-  const inGroup = new Set();
-  for (const g of groups) g.contacts.forEach(c => inGroup.add(c._idx));
-  const unique = contacts.filter((c, i) => !inGroup.has(i));
-
-  return { groups: groups.sort((a, b) => b.confidence - a.confidence), unique };
+  return { before: agg(beforeContacts), after: agg(afterContacts), losses: [] };
 }
 
-// ── Merge Contacts ───────────────────────────────────────────────
-function mergeContacts(contacts) {
-  // Pick longest/most complete name
-  let bestName = '';
-  let bestNameWords = 0;
-  for (const c of contacts) {
-    const words = c.name.trim().split(/\s+/).length;
-    if (words > bestNameWords || (words === bestNameWords && c.name.length > bestName.length)) {
-      bestName = c.name;
-      bestNameWords = words;
-    }
-  }
-
-  // Deduplicate emails
-  const emailSet = new Set();
-  const emails = [];
-  for (const c of contacts) {
-    for (const e of c.emails) {
-      const ne = normalizeEmail(e);
-      if (!emailSet.has(ne)) { emailSet.add(ne); emails.push(e); }
-    }
-  }
-
-  // Deduplicate phones
-  const phoneSet = new Set();
-  const phones = [];
-  for (const c of contacts) {
-    for (const p of c.phones) {
-      const np = normalizePhone(p);
-      if (!phoneSet.has(np)) { phoneSet.add(np); phones.push(p); }
-    }
-  }
-
-  // First non-empty for single fields
-  const org = contacts.map(c => c.org).find(v => v) || '';
-  const title = contacts.map(c => c.title).find(v => v) || '';
-  const birthday = contacts.map(c => c.birthday).find(v => v) || '';
-  const url = contacts.map(c => c.url).find(v => v) || '';
-  const photo = contacts.map(c => c.photo).find(v => v) || '';
-
-  // Merge notes
-  const noteSet = new Set();
-  const notes = contacts.map(c => c.notes).filter(n => n && !noteSet.has(n) && noteSet.add(n));
-
+function normalizeReport(rep, beforeContacts, afterContacts) {
+  const local = localIntegrity(beforeContacts, afterContacts);
+  const pick = (side, key) => {
+    const v = rep && rep[side] ? rep[side][key] : undefined;
+    return (typeof v === 'number' && isFinite(v)) ? v : local[side][key];
+  };
   return {
-    name: bestName,
-    emails,
-    phones,
-    org,
-    title,
-    birthday,
-    url,
-    notes: notes.join('; '),
-    photo,
+    before: { contacts: pick('before','contacts'), withNotes: pick('before','withNotes'), chars: pick('before','chars'), lines: pick('before','lines') },
+    after:  { contacts: pick('after','contacts'),  withNotes: pick('after','withNotes'),  chars: pick('after','chars'),  lines: pick('after','lines') },
+    losses: rep && Array.isArray(rep.losses) ? rep.losses : [],
   };
 }
 
-// ── Export: vCard ─────────────────────────────────────────────────
-function contactToVCard(c) {
-  let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
-  vcard += `FN:${c.name}\n`;
-  const nameParts = c.name.split(/\s+/);
-  const last = nameParts.length > 1 ? nameParts.pop() : '';
-  const first = nameParts.join(' ');
-  vcard += `N:${last};${first};;;\n`;
-  for (const e of c.emails) vcard += `EMAIL:${e}\n`;
-  for (const p of c.phones) vcard += `TEL:${p}\n`;
-  if (c.org) vcard += `ORG:${c.org}\n`;
-  if (c.title) vcard += `TITLE:${c.title}\n`;
-  if (c.birthday) vcard += `BDAY:${c.birthday}\n`;
-  if (c.url) vcard += `URL:${c.url}\n`;
-  if (c.notes) vcard += `NOTE:${c.notes}\n`;
-  vcard += 'END:VCARD\n';
-  return vcard;
-}
-
-function generateVCardExport() {
-  const merged = [];
-  for (const g of state.groups) {
-    if (g.status === 'approved' && g.merged) merged.push(g.merged);
-    else if (g.status === 'skipped') g.contacts.forEach(c => merged.push(c));
-    else if (g.status === 'pending') g.contacts.forEach(c => merged.push(c));
+// The single entry point for all note-integrity checks in the UI.
+function integrityFor(beforeContacts, afterContacts) {
+  let rep = null;
+  if (window.DedupeEngine && typeof DedupeEngine.noteIntegrityReport === 'function') {
+    try {
+      rep = DedupeEngine.noteIntegrityReport(beforeContacts, afterContacts);
+    } catch (err) {
+      console.error('noteIntegrityReport failed, using local fallback', err);
+    }
   }
-  for (const c of state.uniqueContacts) merged.push(c);
-  return { contacts: merged, text: merged.map(contactToVCard).join('\n') };
+  return normalizeReport(rep, beforeContacts, afterContacts);
 }
 
-// ── Export: CSV ───────────────────────────────────────────────────
-function generateCSV() {
-  const { contacts } = generateVCardExport();
-  const rows = [['Name','Email','Phone','Organization','Title','Birthday','URL','Notes']];
-  for (const c of contacts) {
-    rows.push([
-      c.name || '',
-      (c.emails || []).join('; '),
-      (c.phones || []).join('; '),
-      c.org || '',
-      c.title || '',
-      c.birthday || '',
-      c.url || '',
-      c.notes || '',
-    ]);
-  }
-  return rows.map(r => r.map(v => `"${(v+'').replace(/"/g,'""')}"`).join(',')).join('\n');
+function describeLoss(l) {
+  if (l == null) return 'Unknown loss';
+  if (typeof l === 'string') return l;
+  const name = l.name || l.contactName || l.key ||
+    (l.contact && (typeof l.contact === 'string' ? l.contact : l.contact.name)) || '';
+  const b = l.beforeChars != null ? l.beforeChars
+    : (l.before != null ? (typeof l.before === 'object' ? l.before.chars : l.before) : null);
+  const a = l.afterChars != null ? l.afterChars
+    : (l.after != null ? (typeof l.after === 'object' ? l.after.chars : l.after) : null);
+  let s = name ? String(name) : '';
+  if (b != null && a != null) s += (s ? ' — ' : '') + num(b).toLocaleString() + ' → ' + num(a).toLocaleString() + ' chars';
+  if (!s) { try { s = JSON.stringify(l); } catch (e) { s = String(l); } }
+  return s;
 }
-
-// ── Export: JSON ──────────────────────────────────────────────────
-function generateJSON() {
-  const { contacts } = generateVCardExport();
-  return JSON.stringify(contacts.map(c => ({
-    name: c.name,
-    emails: c.emails || [],
-    phones: c.phones || [],
-    organization: c.org || '',
-    title: c.title || '',
-    birthday: c.birthday || '',
-    url: c.url || '',
-    notes: c.notes || '',
-  })), null, 2);
-}
-
-// ─────────────────────────────────────────────────────────────────
-//  UI LAYER
-// ─────────────────────────────────────────────────────────────────
 
 // ── File Upload ──────────────────────────────────────────────────
 function setupDropZone(zoneId, inputId, infoId, fileNum) {
@@ -1664,49 +1423,111 @@ function setupDropZone(zoneId, inputId, infoId, fileNum) {
 }
 
 function handleFile(file, zone, info, fileNum) {
-  if (!file.name.match(/\.(vcf|vcard)$/i)) {
-    showToast('Please select a .vcf file', 'error');
+  if (!window.DedupeEngine || typeof DedupeEngine.parseVCards !== 'function') {
+    showToast('engine.js is not loaded — cannot parse files', 'error');
     return;
+  }
+  if (!file.name.match(/\.(vcf|vcard)$/i)) {
+    showToast('Please select a .vcf or .vcard file', 'error');
+    return;
+  }
+  if (file.size > LARGE_FILE_BYTES) {
+    const mb = (file.size / (1024 * 1024)).toFixed(0);
+    if (!confirm(`"${file.name}" is ${mb} MB, which is very large. Parsing may take a while and the tab may briefly freeze. Continue anyway?`)) {
+      return;
+    }
   }
   const reader = new FileReader();
   reader.onload = (e) => {
-    const contacts = parseVCards(e.target.result);
-    if (fileNum === 1) state.file1Contacts = contacts;
-    else state.file2Contacts = contacts;
-    zone.classList.add('loaded');
-    info.classList.remove('hidden');
-    info.textContent = `${contacts.length} contacts loaded`;
-    zone.querySelector('.drop-zone-title').textContent = file.name;
-    zone.querySelector('.drop-zone-sub').textContent = `${(file.size / 1024).toFixed(1)} KB`;
-    checkReady();
+    showProgress('Parsing vCards…', file.name);
+    // Let the overlay paint before the (potentially heavy) parse runs.
+    setTimeout(() => {
+      try {
+        const contacts = DedupeEngine.parseVCards(e.target.result) || [];
+        const source = fileNum === 1 ? 'master' : 'iphone';
+        contacts.forEach((c, i) => { c._source = source; c._sourceIdx = i; });
+        if (fileNum === 1) state.masterContacts = contacts;
+        else state.iphoneContacts = contacts;
+        state.allContacts = [...state.masterContacts, ...state.iphoneContacts];
+
+        zone.classList.add('loaded');
+        info.classList.remove('hidden');
+        info.textContent = `${contacts.length.toLocaleString()} contacts loaded`;
+        zone.querySelector('.drop-zone-title').textContent = file.name;
+        zone.querySelector('.drop-zone-sub').textContent = formatSize(file.size);
+        checkReady();
+        showToast(`${contacts.length.toLocaleString()} contacts parsed from ${file.name}`, 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to parse ' + file.name + ': ' + err.message, 'error');
+      } finally {
+        hideProgress();
+      }
+    }, 60);
   };
+  reader.onerror = () => showToast('Failed to read ' + file.name, 'error');
   reader.readAsText(file);
 }
 
 function checkReady() {
-  document.getElementById('btnFindDupes').disabled =
-    !(state.file1Contacts.length || state.file2Contacts.length);
+  // Priority 1 is the single master file — the second file is optional.
+  const ready = !!window.DedupeEngine && state.masterContacts.length > 0;
+  document.getElementById('btnFindDupes').disabled = !ready;
 }
 
 // ── Find Duplicates ──────────────────────────────────────────────
 function findDuplicates() {
-  state.threshold = parseInt(document.getElementById('thresholdSlider').value);
+  if (!window.DedupeEngine || typeof DedupeEngine.findDuplicateGroups !== 'function') {
+    showToast('engine.js is not loaded — cannot analyze', 'error');
+    return;
+  }
+  state.threshold = parseInt(document.getElementById('thresholdSlider').value, 10);
   state.autoMerge = document.getElementById('autoMerge').checked;
 
-  state.allContacts = [...state.file1Contacts.map((c, i) => ({...c, _source: 'File 1', _sourceIdx: i})),
-                       ...state.file2Contacts.map((c, i) => ({...c, _source: 'File 2', _sourceIdx: i}))];
+  state.allContacts = [...state.masterContacts, ...state.iphoneContacts];
+  state.undoStack = [];
+  state.expandedGroups = new Set();
+  state.exportResult = null;
 
-  showProgress('Analyzing contacts...', 'Building match index');
+  showProgress('Analyzing contacts…', `Matching ${state.allContacts.length.toLocaleString()} contacts at ${state.threshold}% threshold`);
 
   setTimeout(() => {
-    const { groups, unique } = findDuplicateGroups(state.allContacts, state.threshold);
+    let result;
+    try {
+      result = DedupeEngine.findDuplicateGroups(state.allContacts, { threshold: state.threshold });
+    } catch (err) {
+      hideProgress();
+      console.error(err);
+      showToast('Analysis failed: ' + err.message, 'error');
+      return;
+    }
 
-    // Auto-merge high confidence if enabled
+    const groups = (result && Array.isArray(result.groups)) ? result.groups : [];
+    const unique = (result && Array.isArray(result.unique)) ? result.unique : [];
+
+    // Normalize group shape defensively.
+    for (const g of groups) {
+      g.contacts = Array.isArray(g.contacts) ? g.contacts : [];
+      g.factors = Array.isArray(g.factors) ? g.factors : [];
+      g.warnings = Array.isArray(g.warnings) ? g.warnings : [];
+      g.confidence = num(g.confidence);
+      g.status = g.status || 'pending';
+      if (g.merged === undefined) g.merged = null;
+    }
+
+    // Auto-merge checkbox semantics: approve ONLY groups the engine
+    // explicitly flags as autoMergeSafe.
+    let autoCount = 0;
     if (state.autoMerge) {
       for (const g of groups) {
-        if (g.confidence >= 95 && g.warnings.length === 0) {
-          g.merged = mergeContacts(g.contacts);
-          g.status = 'approved';
+        if (g.autoMergeSafe === true && g.status === 'pending') {
+          try {
+            g.merged = DedupeEngine.mergeContacts(g.contacts);
+            g.status = 'approved';
+            autoCount++;
+          } catch (err) {
+            console.error('Auto-merge failed for a group, left pending', err);
+          }
         }
       }
     }
@@ -1714,7 +1535,9 @@ function findDuplicates() {
     state.groups = groups;
     state.uniqueContacts = unique;
     state.filteredGroups = groups;
+    state.currentTab = 'all';
     state.currentPage = 0;
+    document.getElementById('searchInput').value = '';
 
     hideProgress();
 
@@ -1723,16 +1546,15 @@ function findDuplicates() {
       return;
     }
 
-    const autoCount = groups.filter(g => g.status === 'approved').length;
     if (autoCount > 0) {
-      showToast(`Auto-merged ${autoCount} high-confidence groups`, 'success');
+      showToast(`Auto-approved ${autoCount.toLocaleString()} safe group${autoCount > 1 ? 's' : ''}`, 'success');
     }
 
     showScreen('screenReview');
     updateStats();
     buildConfidenceTabs();
     renderGroups();
-  }, 100);
+  }, 80);
 }
 
 // ── Screens ──────────────────────────────────────────────────────
@@ -1749,16 +1571,16 @@ function showScreen(id) {
 
 // ── Stats ────────────────────────────────────────────────────────
 function updateStats() {
-  document.getElementById('statTotal').textContent = state.allContacts.length;
-  document.getElementById('statDupes').textContent = state.groups.length;
-  document.getElementById('statMerged').textContent = state.groups.filter(g => g.status === 'approved').length;
+  document.getElementById('statTotal').textContent = state.allContacts.length.toLocaleString();
+  document.getElementById('statDupes').textContent = state.groups.length.toLocaleString();
+  document.getElementById('statMerged').textContent = state.groups.filter(g => g.status === 'approved').length.toLocaleString();
   updateProgress();
 }
 
 function updateProgress() {
   const reviewed = state.groups.filter(g => g.status !== 'pending').length;
   const total = state.groups.length;
-  document.getElementById('progressText').textContent = `${reviewed} / ${total} reviewed`;
+  document.getElementById('progressText').textContent = `${reviewed.toLocaleString()} / ${total.toLocaleString()} reviewed`;
   document.getElementById('progressFill').style.width = total ? `${(reviewed / total) * 100}%` : '0%';
 }
 
@@ -1808,12 +1630,13 @@ function filterGroups() {
 
   // Search filter
   if (state.searchQuery) {
+    const q = state.searchQuery;
     filtered = filtered.filter(g =>
       g.contacts.some(c =>
-        c.name.toLowerCase().includes(state.searchQuery) ||
-        c.emails.some(e => e.toLowerCase().includes(state.searchQuery)) ||
-        c.phones.some(p => p.includes(state.searchQuery)) ||
-        (c.org && c.org.toLowerCase().includes(state.searchQuery))
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.emails || []).some(e => valOf(e).toLowerCase().includes(q)) ||
+        (c.phones || []).some(p => valOf(p).toLowerCase().includes(q)) ||
+        (c.org && c.org.toLowerCase().includes(q))
       )
     );
   }
@@ -1821,6 +1644,50 @@ function filterGroups() {
   state.filteredGroups = filtered;
   state.currentPage = 0;
   renderGroups();
+}
+
+function groupCardHtml(g, globalIdx) {
+  const confClass = g.confidence >= 90 ? 'conf-high' : g.confidence >= 70 ? 'conf-medium' : g.confidence >= 50 ? 'conf-low' : 'conf-very-low';
+  const statusClass = g.status === 'approved' ? 'approved' : g.status === 'skipped' ? 'skipped' : '';
+  const names = g.contacts.map(c => c.name).filter(Boolean);
+  const displayName = names[0] || 'Unknown';
+  const emailCount = new Set(g.contacts.flatMap(c => (c.emails || []).map(e => valOf(e).toLowerCase()).filter(Boolean))).size;
+  const phoneCount = new Set(g.contacts.flatMap(c => (c.phones || []).map(p => valOf(p)).filter(Boolean))).size;
+  const noteCount = g.contacts.reduce((n, c) => n + notesOf(c).length, 0);
+  const crossFile = new Set(g.contacts.map(c => c._source)).size > 1;
+
+  const warningsHtml = g.warnings.map(w => `<span class="warning-badge">&#x26A0; ${esc(w)}</span>`).join('');
+  const crossFileHtml = crossFile ? '<span class="cross-file-badge" title="This group contains contacts from both loaded files">&#x21C4; Cross-file</span>' : '';
+
+  return `
+    <div class="group-card ${statusClass}" id="group-${globalIdx}">
+      <div class="group-header" onclick="toggleGroup(${globalIdx})">
+        <div class="group-header-left">
+          <div class="group-confidence ${confClass}">${g.confidence}%</div>
+          <div class="group-info">
+            <h3>${esc(displayName)}${names.length > 1 ? ` <span style="color:var(--text-muted);font-weight:400">+ ${names.length - 1} variant${names.length > 2 ? 's' : ''}</span>` : ''}</h3>
+            <div class="group-meta">
+              <span>&#x1F465; ${g.contacts.length} contacts</span>
+              ${emailCount ? `<span>&#x2709; ${emailCount} emails</span>` : ''}
+              ${phoneCount ? `<span>&#x260E; ${phoneCount} phones</span>` : ''}
+              ${noteCount ? `<span>&#x1F4DD; ${noteCount} note${noteCount > 1 ? 's' : ''}</span>` : ''}
+              ${g.autoMergeSafe === true ? '<span style="color:var(--success)">&#x2714; auto-merge safe</span>' : ''}
+              ${g.status === 'approved' ? '<span style="color:var(--success)">&#x2714; Merged</span>' : ''}
+              ${g.status === 'skipped' ? '<span style="color:var(--text-muted)">&#x2716; Skipped</span>' : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="group-warnings">${crossFileHtml}${warningsHtml}</div>
+          <div class="group-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-success" onclick="approveGroup(${globalIdx})" ${g.status === 'approved' ? 'disabled' : ''}>&#x2714; Merge</button>
+            <button class="btn btn-sm" onclick="editGroup(${globalIdx})">&#x270F; Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="skipGroup(${globalIdx})" ${g.status === 'skipped' ? 'disabled' : ''}>&#x2716; Skip</button>
+          </div>
+        </div>
+      </div>
+      <div class="group-body" id="groupBody-${globalIdx}"></div>
+    </div>`;
 }
 
 function renderGroups() {
@@ -1839,161 +1706,230 @@ function renderGroups() {
     return;
   }
 
-  container.innerHTML = pageGroups.map((g, i) => {
-    const globalIdx = state.groups.indexOf(g);
-    const confClass = g.confidence >= 90 ? 'conf-high' : g.confidence >= 70 ? 'conf-medium' : g.confidence >= 50 ? 'conf-low' : 'conf-very-low';
-    const statusClass = g.status === 'approved' ? 'approved' : g.status === 'skipped' ? 'skipped' : '';
-    const names = g.contacts.map(c => c.name).filter(Boolean);
-    const displayName = names[0] || 'Unknown';
-    const emailCount = new Set(g.contacts.flatMap(c => c.emails.map(normalizeEmail))).size;
-    const phoneCount = new Set(g.contacts.flatMap(c => c.phones.map(normalizePhone))).size;
+  container.innerHTML = pageGroups.map(g => groupCardHtml(g, state.groups.indexOf(g))).join('');
 
-    const warningsHtml = g.warnings.map(w => `<span class="warning-badge">&#x26A0; ${w}</span>`).join('');
-
-    const contactsHtml = g.contacts.map((c, ci) => {
-      const initials = c.name ? c.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() : '?';
-      const avatarClass = `avatar-${(ci % 3) + 1}`;
-      return `
-        <div class="contact-card">
-          <div class="contact-card-header">
-            <div class="contact-avatar ${avatarClass}">${initials}</div>
-            <div>
-              <div class="contact-name">${esc(c.name || 'No Name')}</div>
-              <div class="contact-source">${esc(c._source || 'Source')}</div>
-            </div>
-          </div>
-          <div class="contact-fields">
-            ${c.emails.map(e => `<div class="contact-field"><span class="field-icon">&#x2709;</span><span class="field-value">${esc(e)}</span></div>`).join('')}
-            ${c.phones.map(p => `<div class="contact-field"><span class="field-icon">&#x260E;</span><span class="field-value">${esc(p)}</span></div>`).join('')}
-            ${c.org ? `<div class="contact-field"><span class="field-icon">&#x1F3E2;</span><span class="field-value">${esc(c.org)}</span></div>` : ''}
-            ${c.title ? `<div class="contact-field"><span class="field-icon">&#x1F4BC;</span><span class="field-value">${esc(c.title)}</span></div>` : ''}
-            ${c.birthday ? `<div class="contact-field"><span class="field-icon">&#x1F382;</span><span class="field-value">${esc(c.birthday)}</span></div>` : ''}
-          </div>
-        </div>`;
-    }).join('');
-
-    const colClass = g.contacts.length === 2 ? 'two-col' : g.contacts.length >= 3 ? 'three-col' : '';
-    const factorsHtml = g.factors.map(f => `<span class="match-factor">${esc(f)}</span>`).join('');
-
-    // Merged preview
-    const merged = g.merged || mergeContacts(g.contacts);
-    const mergePreviewHtml = `
-      <div class="merge-preview">
-        <h4>&#x2728; Merged Result</h4>
-        <div class="contact-fields">
-          <div class="contact-field"><span class="field-icon">&#x1F464;</span><span class="field-value highlight">${esc(merged.name)}</span></div>
-          ${merged.emails.map(e => `<div class="contact-field"><span class="field-icon">&#x2709;</span><span class="field-value">${esc(e)}</span></div>`).join('')}
-          ${merged.phones.map(p => `<div class="contact-field"><span class="field-icon">&#x260E;</span><span class="field-value">${esc(p)}</span></div>`).join('')}
-          ${merged.org ? `<div class="contact-field"><span class="field-icon">&#x1F3E2;</span><span class="field-value">${esc(merged.org)}</span></div>` : ''}
-        </div>
-        <div class="match-factors">${factorsHtml}</div>
-      </div>`;
-
-    return `
-      <div class="group-card ${statusClass}" id="group-${globalIdx}">
-        <div class="group-header" onclick="toggleGroup(${globalIdx})">
-          <div class="group-header-left">
-            <div class="group-confidence ${confClass}">${g.confidence}%</div>
-            <div class="group-info">
-              <h3>${esc(displayName)}${names.length > 1 ? ` <span style="color:var(--text-muted);font-weight:400">+ ${names.length - 1} variant${names.length > 2 ? 's' : ''}</span>` : ''}</h3>
-              <div class="group-meta">
-                <span>&#x1F465; ${g.contacts.length} contacts</span>
-                ${emailCount ? `<span>&#x2709; ${emailCount} emails</span>` : ''}
-                ${phoneCount ? `<span>&#x260E; ${phoneCount} phones</span>` : ''}
-                ${g.status === 'approved' ? '<span style="color:var(--success)">&#x2714; Merged</span>' : ''}
-                ${g.status === 'skipped' ? '<span style="color:var(--text-muted)">&#x2716; Skipped</span>' : ''}
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="group-warnings">${warningsHtml}</div>
-            <div class="group-actions" onclick="event.stopPropagation()">
-              <button class="btn btn-sm btn-success" onclick="approveGroup(${globalIdx})" ${g.status === 'approved' ? 'disabled' : ''}>&#x2714; Merge</button>
-              <button class="btn btn-sm" onclick="editGroup(${globalIdx})">&#x270F; Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="skipGroup(${globalIdx})" ${g.status === 'skipped' ? 'disabled' : ''}>&#x2716; Skip</button>
-            </div>
-          </div>
-        </div>
-        <div class="group-body">
-          <div class="contacts-comparison ${colClass}">${contactsHtml}</div>
-          ${mergePreviewHtml}
-        </div>
-      </div>`;
-  }).join('');
+  // Rebuild bodies only for groups the user previously expanded
+  // (notes and merge previews are never rendered eagerly).
+  for (const idx of state.expandedGroups) {
+    const el = document.getElementById(`group-${idx}`);
+    if (el) {
+      el.classList.add('expanded');
+      buildGroupBody(idx);
+    }
+  }
 
   updatePageNav();
 }
 
-function toggleGroup(idx) {
-  const el = document.getElementById(`group-${idx}`);
-  if (el) el.classList.toggle('expanded');
+// ── Expanded group body (built lazily on first expand) ───────────
+function buildGroupBody(idx) {
+  const g = state.groups[idx];
+  const body = document.getElementById(`groupBody-${idx}`);
+  if (!g || !body) return;
+
+  const contactsHtml = g.contacts.map((c, ci) => contactCardHtml(c, ci)).join('');
+  const colClass = g.contacts.length === 2 ? 'two-col' : g.contacts.length >= 3 ? 'three-col' : '';
+
+  // Merge preview: compute once, cache on the group.
+  if (!g.merged) {
+    try {
+      g.merged = DedupeEngine.mergeContacts(g.contacts);
+    } catch (err) {
+      console.error('mergeContacts failed for preview', err);
+    }
+  }
+
+  body.innerHTML = `
+    <div class="contacts-comparison ${colClass}">${contactsHtml}</div>
+    ${mergePreviewHtml(g)}`;
+  body.dataset.built = '1';
+
+  // Reveal "show more" only where a note actually overflows its 6-line clamp.
+  body.querySelectorAll('.note-text').forEach(el => {
+    if (el.scrollHeight > el.clientHeight + 2) {
+      const btn = el.parentElement.querySelector('.note-toggle');
+      if (btn) btn.classList.remove('hidden');
+    }
+  });
 }
 
+function contactCardHtml(c, ci) {
+  const initials = c.name ? c.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() : '?';
+  const avatarClass = `avatar-${(ci % 3) + 1}`;
+  const src = (c._source || '').toLowerCase();
+  const srcBadge = src === 'master'
+    ? '<span class="source-badge source-master">Master</span>'
+    : src === 'iphone'
+      ? '<span class="source-badge source-iphone">iPhone</span>'
+      : (c._source ? `<span class="source-badge source-other">${esc(c._source)}</span>` : '');
+  const srcIdx = (typeof c._sourceIdx === 'number') ? `#${c._sourceIdx + 1}` : '';
+
+  const emails = (c.emails || []).map(valOf).filter(Boolean);
+  const phones = (c.phones || []).map(valOf).filter(Boolean);
+  const urls = Array.isArray(c.urls) ? c.urls.map(valOf).filter(Boolean) : (c.urls ? [valOf(c.urls)] : (c.url ? [c.url] : []));
+  const cNotes = notesOf(c);
+
+  return `
+    <div class="contact-card">
+      <div class="contact-card-header">
+        <div class="contact-avatar ${avatarClass}">${esc(initials)}</div>
+        <div>
+          <div class="contact-name">${esc(c.name || 'No Name')}</div>
+          <div class="contact-source">${srcBadge}${srcIdx ? `<span>${srcIdx}</span>` : ''}</div>
+        </div>
+      </div>
+      <div class="contact-fields">
+        ${emails.map(e => `<div class="contact-field"><span class="field-icon">&#x2709;</span><span class="field-value">${esc(e)}</span></div>`).join('')}
+        ${phones.map(p => `<div class="contact-field"><span class="field-icon">&#x260E;</span><span class="field-value">${esc(p)}</span></div>`).join('')}
+        ${c.org ? `<div class="contact-field"><span class="field-icon">&#x1F3E2;</span><span class="field-value">${esc(c.org)}</span></div>` : ''}
+        ${c.title ? `<div class="contact-field"><span class="field-icon">&#x1F4BC;</span><span class="field-value">${esc(c.title)}</span></div>` : ''}
+        ${c.nickname ? `<div class="contact-field"><span class="field-icon">&#x1F3F7;</span><span class="field-value">${esc(c.nickname)}</span></div>` : ''}
+        ${c.birthday ? `<div class="contact-field"><span class="field-icon">&#x1F382;</span><span class="field-value">${esc(c.birthday)}</span></div>` : ''}
+        ${urls.map(u => `<div class="contact-field"><span class="field-icon">&#x1F517;</span><span class="field-value">${esc(u)}</span></div>`).join('')}
+        ${cNotes.length ? `<div class="contact-field"><span class="field-icon">&#x1F4DD;</span><div class="note-content">${noteBlocksHtml(cNotes)}</div></div>` : ''}
+      </div>
+    </div>`;
+}
+
+function noteBlocksHtml(notes) {
+  return notes.map((n, i) => `
+    <div class="note-block">
+      ${notes.length > 1 ? `<div class="note-label">Note ${i + 1} of ${notes.length}</div>` : ''}
+      <div class="note-text">${esc(n)}</div>
+      <button class="note-toggle hidden" onclick="toggleNote(this)">Show more</button>
+    </div>`).join('');
+}
+
+function mergePreviewHtml(g) {
+  const merged = g.merged;
+  if (!merged) {
+    return `<div class="merge-preview"><h4>&#x26A0; Merge preview unavailable</h4><div class="form-hint">The engine could not merge this group — it can still be skipped.</div></div>`;
+  }
+  const badge = noteIntegrityBadgeHtml(g, merged);
+  const mEmails = (merged.emails || []).map(valOf).filter(Boolean);
+  const mPhones = (merged.phones || []).map(valOf).filter(Boolean);
+  const mNotes = notesOf(merged);
+  const factorsHtml = g.factors.map(f => `<span class="match-factor">${esc(f)}</span>`).join('');
+
+  return `
+    <div class="merge-preview">
+      <h4>&#x2728; Merged Result ${badge}</h4>
+      <div class="contact-fields">
+        <div class="contact-field"><span class="field-icon">&#x1F464;</span><span class="field-value highlight">${esc(merged.name || 'No Name')}</span></div>
+        ${mEmails.map(e => `<div class="contact-field"><span class="field-icon">&#x2709;</span><span class="field-value">${esc(e)}</span></div>`).join('')}
+        ${mPhones.map(p => `<div class="contact-field"><span class="field-icon">&#x260E;</span><span class="field-value">${esc(p)}</span></div>`).join('')}
+        ${merged.org ? `<div class="contact-field"><span class="field-icon">&#x1F3E2;</span><span class="field-value">${esc(merged.org)}</span></div>` : ''}
+        ${merged.title ? `<div class="contact-field"><span class="field-icon">&#x1F4BC;</span><span class="field-value">${esc(merged.title)}</span></div>` : ''}
+      </div>
+      ${mNotes.length ? `<div class="merged-notes"><div class="note-label">Merged notes (${mNotes.length}) — full text preserved</div>${noteBlocksHtml(mNotes)}</div>` : ''}
+      ${factorsHtml ? `<div class="match-factors">${factorsHtml}</div>` : ''}
+    </div>`;
+}
+
+function noteIntegrityBadgeHtml(g, merged) {
+  const rep = integrityFor(g.contacts, [merged]);
+  const lost = rep.losses.length > 0 || rep.after.chars < rep.before.chars;
+  if (rep.before.chars === 0 && rep.before.withNotes === 0) {
+    return '<span class="integrity-badge ok">&#x2714; No notes in group</span>';
+  }
+  if (lost) {
+    return `<span class="integrity-badge bad">&#x26A0; NOTE LOSS (${rep.before.chars.toLocaleString()} → ${rep.after.chars.toLocaleString()} chars)</span>`;
+  }
+  return `<span class="integrity-badge ok">&#x2714; Notes preserved (${rep.after.chars.toLocaleString()} chars)</span>`;
+}
+
+function toggleGroup(idx) {
+  const el = document.getElementById(`group-${idx}`);
+  if (!el) return;
+  const willExpand = !el.classList.contains('expanded');
+  el.classList.toggle('expanded');
+  if (willExpand) {
+    state.expandedGroups.add(idx);
+    const body = document.getElementById(`groupBody-${idx}`);
+    if (body && !body.dataset.built) buildGroupBody(idx);
+  } else {
+    state.expandedGroups.delete(idx);
+  }
+}
+
+function toggleNote(btn) {
+  const text = btn.parentElement.querySelector('.note-text');
+  if (!text) return;
+  text.classList.toggle('expanded');
+  btn.textContent = text.classList.contains('expanded') ? 'Show less' : 'Show more';
+}
+
+// ── Approve / Skip / Undo ────────────────────────────────────────
 function approveGroup(idx) {
   const g = state.groups[idx];
+  if (!g || g.status === 'approved') return;
+  if (!g.merged) {
+    try {
+      g.merged = DedupeEngine.mergeContacts(g.contacts);
+    } catch (err) {
+      console.error(err);
+      showToast('Merge failed: ' + err.message, 'error');
+      return;
+    }
+  }
   state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
-  g.merged = g.merged || mergeContacts(g.contacts);
   g.status = 'approved';
   updateGroupCard(idx);
   updateStats();
-  showToast(`Merged: ${g.merged.name}`, 'success');
+  showToast(`Merged: ${g.merged.name || 'contact'}`, 'success');
 }
 
 function skipGroup(idx) {
   const g = state.groups[idx];
+  if (!g || g.status === 'skipped') return;
   state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
   g.status = 'skipped';
   updateGroupCard(idx);
   updateStats();
-  showToast('Group skipped', 'info');
+  showToast('Group skipped — originals kept as-is', 'info');
 }
 
+// Re-render a single card in place, preserving expand/collapse state.
 function updateGroupCard(idx) {
   const el = document.getElementById(`group-${idx}`);
   if (!el) return;
   const g = state.groups[idx];
-  el.className = `group-card ${g.status === 'approved' ? 'approved' : g.status === 'skipped' ? 'skipped' : ''}`;
-  // Update buttons
-  const mergeBtn = el.querySelector('.btn-success');
-  const skipBtn = el.querySelector('.btn-danger');
-  if (mergeBtn) mergeBtn.disabled = g.status === 'approved';
-  if (skipBtn) skipBtn.disabled = g.status === 'skipped';
-  // Update meta
-  const meta = el.querySelector('.group-meta');
-  if (meta) {
-    // Remove old status spans
-    meta.querySelectorAll('[style*="color:var(--success)"], [style*="color:var(--text-muted)"]').forEach(s => {
-      if (s.textContent.includes('Merged') || s.textContent.includes('Skipped')) s.remove();
-    });
-    if (g.status === 'approved') {
-      const s = document.createElement('span');
-      s.style.color = 'var(--success)';
-      s.innerHTML = '&#x2714; Merged';
-      meta.appendChild(s);
-    } else if (g.status === 'skipped') {
-      const s = document.createElement('span');
-      s.style.color = 'var(--text-muted)';
-      s.innerHTML = '&#x2716; Skipped';
-      meta.appendChild(s);
+  if (!g) return;
+  const wasExpanded = el.classList.contains('expanded');
+  el.outerHTML = groupCardHtml(g, idx);
+  if (wasExpanded) {
+    const fresh = document.getElementById(`group-${idx}`);
+    if (fresh) {
+      fresh.classList.add('expanded');
+      buildGroupBody(idx);
     }
   }
 }
 
 function approveAllVisible() {
   let count = 0;
+  let failed = 0;
   for (const g of state.filteredGroups) {
-    if (g.status === 'pending') {
-      const idx = state.groups.indexOf(g);
+    if (g.status !== 'pending') continue;
+    const idx = state.groups.indexOf(g);
+    try {
+      if (!g.merged) g.merged = DedupeEngine.mergeContacts(g.contacts);
       state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
-      g.merged = mergeContacts(g.contacts);
       g.status = 'approved';
       count++;
+    } catch (err) {
+      console.error('Bulk merge failed for a group', err);
+      failed++;
     }
   }
   if (count > 0) {
     renderGroups();
     updateStats();
-    showToast(`Merged ${count} groups`, 'success');
+    showToast(`Merged ${count.toLocaleString()} groups`, 'success');
+  } else if (failed > 0) {
+    showToast(`${failed} group(s) could not be merged`, 'error');
+  } else {
+    showToast('No pending groups in the current filter', 'info');
   }
 }
 
@@ -2004,9 +1940,11 @@ function undoLast() {
   }
   const action = state.undoStack.pop();
   const g = state.groups[action.idx];
-  g.status = action.prevStatus;
-  g.merged = action.prevMerged;
-  updateGroupCard(action.idx);
+  if (g) {
+    g.status = action.prevStatus;
+    g.merged = action.prevMerged;
+    updateGroupCard(action.idx);
+  }
   updateStats();
   showToast('Undone', 'info');
 }
@@ -2014,7 +1952,22 @@ function undoLast() {
 // ── Edit Modal ───────────────────────────────────────────────────
 function editGroup(idx) {
   const g = state.groups[idx];
-  const merged = g.merged || mergeContacts(g.contacts);
+  if (!g) return;
+  if (!g.merged) {
+    try {
+      g.merged = DedupeEngine.mergeContacts(g.contacts);
+    } catch (err) {
+      console.error(err);
+      showToast('Could not build merge preview: ' + err.message, 'error');
+      return;
+    }
+  }
+  const merged = g.merged;
+  const baseEmails = merged.emails || [];
+  const basePhones = merged.phones || [];
+  // Join multiple notes with a blank line for editing; multi-line
+  // content is passed through verbatim — never collapsed or trimmed.
+  const notesText = notesOf(merged).join('\n\n');
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -2029,14 +1982,14 @@ function editGroup(idx) {
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">Full Name</label>
-          <input class="form-input" id="editName" value="${esc(merged.name)}">
+          <input class="form-input" id="editName" value="${esc(merged.name || '')}">
         </div>
         <div class="form-group">
           <label class="form-label">Emails</label>
           <div class="form-input-multi" id="editEmails">
-            ${merged.emails.map((e, i) => `
+            ${baseEmails.map((e, i) => `
               <div class="form-input-row">
-                <input class="form-input edit-email" value="${esc(e)}">
+                <input class="form-input edit-email" data-orig-idx="${i}" value="${esc(valOf(e))}">
                 <button class="btn btn-sm btn-icon" onclick="this.parentElement.remove()">&times;</button>
               </div>`).join('')}
           </div>
@@ -2045,9 +1998,9 @@ function editGroup(idx) {
         <div class="form-group">
           <label class="form-label">Phones</label>
           <div class="form-input-multi" id="editPhones">
-            ${merged.phones.map(p => `
+            ${basePhones.map((p, i) => `
               <div class="form-input-row">
-                <input class="form-input edit-phone" value="${esc(p)}">
+                <input class="form-input edit-phone" data-orig-idx="${i}" value="${esc(valOf(p))}">
                 <button class="btn btn-sm btn-icon" onclick="this.parentElement.remove()">&times;</button>
               </div>`).join('')}
           </div>
@@ -2055,20 +2008,21 @@ function editGroup(idx) {
         </div>
         <div class="form-group">
           <label class="form-label">Organization</label>
-          <input class="form-input" id="editOrg" value="${esc(merged.org)}">
+          <input class="form-input" id="editOrg" value="${esc(merged.org || '')}">
         </div>
         <div class="form-group">
           <label class="form-label">Title</label>
-          <input class="form-input" id="editTitle" value="${esc(merged.title)}">
+          <input class="form-input" id="editTitle" value="${esc(merged.title || '')}">
         </div>
         <div class="form-group">
           <label class="form-label">Notes</label>
-          <textarea class="form-input" id="editNotes">${esc(merged.notes)}</textarea>
+          <textarea class="form-input notes-editor" id="editNotes" spellcheck="false">${esc(notesText)}</textarea>
+          <div class="form-hint">Line breaks are preserved exactly as typed — notes are stored and exported in full.</div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveEdit(${idx})">Save & Merge</button>
+        <button class="btn btn-primary" onclick="saveEdit(${idx})">Save &amp; Merge</button>
       </div>
     </div>`;
 
@@ -2084,77 +2038,262 @@ function addEditField(containerId, className) {
   row.querySelector('input').focus();
 }
 
-function saveEdit(idx) {
-  const g = state.groups[idx];
-  state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
-
-  g.merged = {
-    name: document.getElementById('editName').value,
-    emails: [...document.querySelectorAll('.edit-email')].map(e => e.value).filter(Boolean),
-    phones: [...document.querySelectorAll('.edit-phone')].map(p => p.value).filter(Boolean),
-    org: document.getElementById('editOrg').value,
-    title: document.getElementById('editTitle').value,
-    birthday: (g.merged || mergeContacts(g.contacts)).birthday,
-    url: (g.merged || mergeContacts(g.contacts)).url,
-    notes: document.getElementById('editNotes').value,
-    photo: (g.merged || mergeContacts(g.contacts)).photo,
-  };
-  g.status = 'approved';
-
-  document.querySelector('.modal-overlay').remove();
-  updateGroupCard(idx);
-  updateStats();
-  renderGroups();
-  showToast(`Saved: ${g.merged.name}`, 'success');
+// Collect edited multi-value fields. Rows carry data-orig-idx pointing at
+// the entry they were seeded from: if that entry was a { value, params }
+// object we keep its params and only replace the value; brand-new rows
+// become plain strings.
+function collectEdited(selector, origArr) {
+  return [...document.querySelectorAll(selector)].map(inp => {
+    const v = inp.value.trim();
+    if (!v) return null;
+    const oi = inp.dataset.origIdx;
+    const orig = (oi !== undefined && oi !== '') ? origArr[Number(oi)] : undefined;
+    if (orig && typeof orig === 'object') return { ...orig, value: v };
+    return v;
+  }).filter(Boolean);
 }
 
-// ── Export ────────────────────────────────────────────────────────
-function showExport() {
-  const approved = state.groups.filter(g => g.status === 'approved').length;
-  const pending = state.groups.filter(g => g.status === 'pending').length;
-  const { contacts } = generateVCardExport();
+// The engine serializes contact.props on export (contactToVCard), so edits
+// made in the modal must be written back into props — otherwise they would
+// live only on the convenience fields and be silently dropped from the .vcf.
+// Editable fields are rebuilt from the edited values; every other prop
+// (UID, REV, ADR, URL, PHOTO, X-*, …) is carried over untouched.
+function applyEditsToProps(merged) {
+  const EDITED = { FN: 1, ORG: 1, TITLE: 1, EMAIL: 1, TEL: 1, NOTE: 1 };
+  const kept = (Array.isArray(merged.props) ? merged.props : []).filter(p => p && p.name && !EDITED[p.name]);
+  const mk = (name, params, value) => ({ name, params: params || {}, value, rawLine: null });
+  const props = [];
+  if (merged.name) props.push(mk('FN', {}, merged.name));
+  if (merged.org) props.push(mk('ORG', {}, [merged.org]));
+  if (merged.title) props.push(mk('TITLE', {}, merged.title));
+  (merged.emails || []).forEach(e => {
+    const isObj = e && typeof e === 'object';
+    props.push(mk('EMAIL', isObj ? e.params : {}, isObj ? e.value : e));
+  });
+  (merged.phones || []).forEach(p => {
+    const isObj = p && typeof p === 'object';
+    props.push(mk('TEL', isObj ? p.params : {}, isObj ? p.value : p));
+  });
+  notesOf(merged).forEach(n => props.push(mk('NOTE', {}, n)));
+  merged.props = props.concat(kept);
+}
 
+function saveEdit(idx) {
+  const g = state.groups[idx];
+  if (!g || !g.merged) return;
+  state.undoStack.push({ idx, prevStatus: g.status, prevMerged: g.merged });
+
+  const base = g.merged;
+  const merged = { ...base }; // keeps props, birthday, urls, addresses, etc.
+  merged.name = document.getElementById('editName').value;
+  merged.emails = collectEdited('.edit-email', base.emails || []);
+  merged.phones = collectEdited('.edit-phone', base.phones || []);
+  merged.org = document.getElementById('editOrg').value;
+  merged.title = document.getElementById('editTitle').value;
+
+  // Notes: textarea value is stored verbatim (multi-line intact). Match the
+  // engine's shape — array in, array out; string in, string out.
+  const notesVal = document.getElementById('editNotes').value;
+  merged.notes = Array.isArray(base.notes) ? (notesVal ? [notesVal] : []) : notesVal;
+
+  applyEditsToProps(merged);
+  g.merged = merged;
+  g.status = 'approved';
+
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) overlay.remove();
+  updateGroupCard(idx);
+  updateStats();
+  showToast(`Saved: ${merged.name || 'contact'}`, 'success');
+}
+
+// ── Dry-run Merge Plan ───────────────────────────────────────────
+function currentStats() {
+  const approvedGroups = state.groups.filter(g => g.status === 'approved');
+  const removed = approvedGroups.reduce((n, g) => n + Math.max(0, g.contacts.length - 1), 0);
+  return {
+    threshold: state.threshold,
+    totalContacts: state.allContacts.length,
+    duplicateGroups: state.groups.length,
+    approved: approvedGroups.length,
+    skipped: state.groups.filter(g => g.status === 'skipped').length,
+    pending: state.groups.filter(g => g.status === 'pending').length,
+    uniqueContacts: state.uniqueContacts.length,
+    duplicatesRemoved: removed,
+    finalCount: state.allContacts.length - removed,
+  };
+}
+
+function downloadMergePlan() {
+  if (!state.groups.length) {
+    showToast('Run analysis first — nothing to plan yet', 'info');
+    return;
+  }
+  try {
+    const txt = DedupeEngine.generateAuditLog(state.groups, currentStats());
+    downloadFile('dedupe_pro_merge_plan.txt', txt, 'text/plain');
+  } catch (err) {
+    console.error(err);
+    showToast('Could not generate merge plan: ' + err.message, 'error');
+  }
+}
+
+// ── Export / Results ─────────────────────────────────────────────
+function showExport() {
+  if (!window.DedupeEngine || typeof DedupeEngine.buildExport !== 'function') {
+    showToast('engine.js is not loaded — cannot export', 'error');
+    return;
+  }
+  const pending = state.groups.filter(g => g.status === 'pending').length;
   if (pending > 0) {
-    if (!confirm(`${pending} groups are still pending review. Export anyway?`)) return;
+    if (!confirm(`${pending.toLocaleString()} groups are still pending review. They will be exported as-is (unmerged). Export anyway?`)) return;
   }
 
-  // Build results
+  showProgress('Building export…', 'Merging approved groups and verifying notes');
+
+  setTimeout(() => {
+    let exportRes;
+    try {
+      exportRes = DedupeEngine.buildExport(state.groups, state.uniqueContacts);
+    } catch (err) {
+      hideProgress();
+      console.error(err);
+      showToast('Export failed: ' + err.message, 'error');
+      return;
+    }
+    state.exportResult = exportRes;
+    const contacts = (exportRes && Array.isArray(exportRes.contacts)) ? exportRes.contacts : [];
+    hideProgress();
+    renderResults(contacts.length);
+    showScreen('screenResults');
+  }, 60);
+}
+
+function renderResults(finalCount) {
+  const approved = state.groups.filter(g => g.status === 'approved').length;
   const statsHtml = `
     <div class="result-stat">
-      <div class="result-stat-value">${state.allContacts.length}</div>
+      <div class="result-stat-value">${state.allContacts.length.toLocaleString()}</div>
       <div class="result-stat-label">Total Input</div>
     </div>
     <div class="result-stat">
-      <div class="result-stat-value" style="color:var(--success)">${approved}</div>
+      <div class="result-stat-value" style="color:var(--success)">${approved.toLocaleString()}</div>
       <div class="result-stat-label">Groups Merged</div>
     </div>
     <div class="result-stat">
-      <div class="result-stat-value" style="color:var(--accent-light)">${contacts.length}</div>
+      <div class="result-stat-value" style="color:var(--accent-light)">${finalCount.toLocaleString()}</div>
       <div class="result-stat-label">Final Contacts</div>
     </div>
     <div class="result-stat">
-      <div class="result-stat-value" style="color:var(--warning)">${state.allContacts.length - contacts.length}</div>
+      <div class="result-stat-value" style="color:var(--warning)">${(state.allContacts.length - finalCount).toLocaleString()}</div>
       <div class="result-stat-label">Duplicates Removed</div>
     </div>`;
 
   document.getElementById('resultsStats').innerHTML = statsHtml;
   document.getElementById('resultsMessage').textContent =
-    `Reduced ${state.allContacts.length} contacts down to ${contacts.length} by merging ${approved} duplicate groups.`;
+    `Reduced ${state.allContacts.length.toLocaleString()} contacts down to ${finalCount.toLocaleString()} by merging ${approved.toLocaleString()} duplicate groups.`;
 
-  showScreen('screenResults');
+  renderIntegrityPanel();
+}
+
+function renderIntegrityPanel() {
+  const panel = document.getElementById('noteIntegrityPanel');
+  const contacts = (state.exportResult && Array.isArray(state.exportResult.contacts)) ? state.exportResult.contacts : [];
+  const rep = integrityFor(state.allContacts, contacts);
+  const lost = rep.losses.length > 0 || rep.after.chars < rep.before.chars;
+
+  panel.className = `integrity-panel ${lost ? 'bad' : 'ok'}`;
+
+  const lossesHtml = rep.losses.slice(0, 50).map(l =>
+    `<div class="loss-item">&#x26A0; ${esc(describeLoss(l))}</div>`).join('');
+  const moreHtml = rep.losses.length > 50
+    ? `<div class="loss-item">…and ${(rep.losses.length - 50).toLocaleString()} more</div>` : '';
+  const charShrinkHtml = (rep.losses.length === 0 && rep.after.chars < rep.before.chars)
+    ? `<div class="loss-item">&#x26A0; Total note characters shrank: ${rep.before.chars.toLocaleString()} → ${rep.after.chars.toLocaleString()}</div>` : '';
+
+  panel.innerHTML = `
+    <div class="integrity-head">
+      ${lost
+        ? `&#x26A0; NOTE LOSS DETECTED (${rep.losses.length || 1} issue${(rep.losses.length || 1) > 1 ? 's' : ''}) — review before importing`
+        : '&#x2714; 0 notes lost — all note content preserved'}
+    </div>
+    <div class="integrity-grid">
+      <div class="integrity-cell">
+        <div class="integrity-cell-value">${rep.before.withNotes.toLocaleString()}</div>
+        <div class="integrity-cell-label">Contacts with notes (before)</div>
+      </div>
+      <div class="integrity-cell">
+        <div class="integrity-cell-value">${rep.after.withNotes.toLocaleString()}</div>
+        <div class="integrity-cell-label">Contacts with notes (after)</div>
+      </div>
+      <div class="integrity-cell">
+        <div class="integrity-cell-value">${rep.before.chars.toLocaleString()}</div>
+        <div class="integrity-cell-label">Note characters (before)</div>
+      </div>
+      <div class="integrity-cell">
+        <div class="integrity-cell-value" style="color:${rep.after.chars < rep.before.chars ? 'var(--danger)' : 'var(--success)'}">${rep.after.chars.toLocaleString()}</div>
+        <div class="integrity-cell-label">Note characters (after)</div>
+      </div>
+      <div class="integrity-cell">
+        <div class="integrity-cell-value">${rep.before.lines.toLocaleString()}</div>
+        <div class="integrity-cell-label">Note lines (before)</div>
+      </div>
+      <div class="integrity-cell">
+        <div class="integrity-cell-value">${rep.after.lines.toLocaleString()}</div>
+        <div class="integrity-cell-label">Note lines (after)</div>
+      </div>
+    </div>
+    ${lost ? `<div class="loss-list">${lossesHtml}${moreHtml}${charShrinkHtml}</div>` : ''}`;
+}
+
+// ── Downloads ────────────────────────────────────────────────────
+function ensureExport() {
+  if (state.exportResult) return true;
+  // Results-screen buttons normally run after buildExport; this is a
+  // safety net if the user navigates oddly.
+  try {
+    state.exportResult = DedupeEngine.buildExport(state.groups, state.uniqueContacts);
+    return true;
+  } catch (err) {
+    console.error(err);
+    showToast('Export is not available yet: ' + err.message, 'error');
+    return false;
+  }
 }
 
 function downloadVCard() {
-  const { text } = generateVCardExport();
-  downloadFile('dedupe_pro_contacts.vcf', text, 'text/vcard');
+  if (!ensureExport()) return;
+  downloadFile('dedupe_pro_contacts.vcf', state.exportResult.vcfText || '', 'text/vcard');
 }
 
 function downloadCSV() {
-  downloadFile('dedupe_pro_contacts.csv', generateCSV(), 'text/csv');
+  if (!ensureExport()) return;
+  try {
+    downloadFile('dedupe_pro_contacts.csv', DedupeEngine.generateCSV(state.exportResult.contacts), 'text/csv');
+  } catch (err) {
+    console.error(err);
+    showToast('CSV export failed: ' + err.message, 'error');
+  }
 }
 
 function downloadJSON() {
-  downloadFile('dedupe_pro_contacts.json', generateJSON(), 'application/json');
+  if (!ensureExport()) return;
+  try {
+    downloadFile('dedupe_pro_contacts.json', DedupeEngine.generateJSON(state.exportResult.contacts), 'application/json');
+  } catch (err) {
+    console.error(err);
+    showToast('JSON export failed: ' + err.message, 'error');
+  }
+}
+
+function downloadAuditLog() {
+  try {
+    const txt = DedupeEngine.generateAuditLog(state.groups, currentStats());
+    downloadFile('dedupe_pro_audit_log.txt', txt, 'text/plain');
+  } catch (err) {
+    console.error(err);
+    showToast('Audit log failed: ' + err.message, 'error');
+  }
 }
 
 function downloadFile(name, content, type) {
@@ -2180,20 +2319,21 @@ function changePage(delta) {
 function updatePageNav() {
   const total = Math.ceil(state.filteredGroups.length / state.pageSize);
   const page = state.currentPage + 1;
-  document.getElementById('pageInfo').textContent = total > 1 ? `Page ${page} of ${total}` : `${state.filteredGroups.length} groups`;
+  document.getElementById('pageInfo').textContent = total > 1 ? `Page ${page} of ${total}` : `${state.filteredGroups.length.toLocaleString()} groups`;
   document.getElementById('btnPrevPage').disabled = state.currentPage <= 0;
   document.getElementById('btnNextPage').disabled = state.currentPage >= total - 1;
 }
 
 // ── Progress Overlay ─────────────────────────────────────────────
 function showProgress(title, sub) {
+  hideProgress();
   const el = document.createElement('div');
   el.className = 'progress-overlay';
   el.id = 'progressOverlay';
   el.innerHTML = `
     <div class="progress-card">
-      <h3>${title}</h3>
-      <p>${sub}</p>
+      <h3>${esc(title)}</h3>
+      <p>${esc(sub)}</p>
       <div class="progress-bar"><div class="progress-fill" style="width:60%;animation:pulse 1.5s infinite"></div></div>
     </div>`;
   document.body.appendChild(el);
@@ -2210,36 +2350,38 @@ function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   const icons = { success: '&#x2714;', error: '&#x2718;', info: '&#x2139;' };
-  toast.innerHTML = `<span>${icons[type] || ''}</span> ${message}`;
+  toast.innerHTML = `<span>${icons[type] || ''}</span> <span>${esc(message)}</span>`;
   container.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3500);
 }
 
 // ── Start Over ───────────────────────────────────────────────────
 function startOver() {
-  state.file1Contacts = [];
-  state.file2Contacts = [];
+  state.masterContacts = [];
+  state.iphoneContacts = [];
   state.allContacts = [];
   state.groups = [];
   state.filteredGroups = [];
   state.uniqueContacts = [];
   state.undoStack = [];
+  state.expandedGroups = new Set();
   state.currentTab = 'all';
   state.currentPage = 0;
+  state.searchQuery = '';
+  state.exportResult = null;
 
-  // Reset drop zones
   for (const id of ['dropZone1', 'dropZone2']) {
-    const el = document.getElementById(id);
-    el.classList.remove('loaded');
+    document.getElementById(id).classList.remove('loaded');
   }
   document.getElementById('fileInfo1').classList.add('hidden');
   document.getElementById('fileInfo2').classList.add('hidden');
   document.getElementById('fileInput1').value = '';
   document.getElementById('fileInput2').value = '';
-  document.querySelector('#dropZone1 .drop-zone-title').textContent = 'First Contact File';
-  document.querySelector('#dropZone1 .drop-zone-sub').textContent = 'Drop .vcf file or click to browse';
-  document.querySelector('#dropZone2 .drop-zone-title').textContent = 'Second Contact File';
-  document.querySelector('#dropZone2 .drop-zone-sub').textContent = 'Drop .vcf file or click to browse';
+  document.querySelector('#dropZone1 .drop-zone-title').textContent = 'Master Contact File (Synology)';
+  document.querySelector('#dropZone1 .drop-zone-sub').textContent = 'Drop .vcf / .vcard file or click to browse';
+  document.querySelector('#dropZone2 .drop-zone-title').textContent = 'Second File (optional — iPhone/iCloud export)';
+  document.querySelector('#dropZone2 .drop-zone-sub').textContent = 'Drop .vcf / .vcard file or click to browse';
+  document.getElementById('searchInput').value = '';
   document.getElementById('btnFindDupes').disabled = true;
 
   showScreen('screenUpload');
@@ -2247,25 +2389,39 @@ function startOver() {
 
 // ── Keyboard Shortcuts ───────────────────────────────────────────
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const m = document.querySelector('.modal-overlay');
+    if (m) { m.remove(); return; }
+  }
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const reviewActive = document.getElementById('screenReview').classList.contains('active');
   if (e.ctrlKey || e.metaKey) {
-    if (e.key === 'z') { e.preventDefault(); undoLast(); }
-    if (e.key === 'e') { e.preventDefault(); showExport(); }
+    if (e.key === 'z') { e.preventDefault(); if (reviewActive) undoLast(); }
+    if (e.key === 'e') { e.preventDefault(); if (reviewActive) showExport(); }
     return;
   }
-  if (e.key === 'a') approveAllVisible();
+  if (e.key === 'a' && reviewActive) approveAllVisible();
 });
 
 // ── Helpers ──────────────────────────────────────────────────────
 function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function formatSize(bytes) {
+  if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  return (bytes / 1024).toFixed(1) + ' KB';
 }
 
 // ── Init ─────────────────────────────────────────────────────────
 setupDropZone('dropZone1', 'fileInput1', 'fileInfo1', 1);
 setupDropZone('dropZone2', 'fileInput2', 'fileInfo2', 2);
+
+if (!window.DedupeEngine) {
+  showToast('engine.js failed to load — the UI is inert until it is available', 'error');
+}
 </script>
 </body>
 </html>

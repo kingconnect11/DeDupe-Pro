@@ -1,0 +1,11 @@
+BEGIN:VCARD
+VERSION:4.0
+FN:Dr. Jane Q. Public
+N:Public;Jane;Quinn;Dr.;PhD
+EMAIL;TYPE=work:jane@work.example
+TEL;TYPE="cell,voice";VALUE=uri:tel:+1-555-987-6543
+ORG:Example Corp;Research Division
+BDAY:19750412
+KIND:individual
+ANNIVERSARY:20010615
+END:VCARD

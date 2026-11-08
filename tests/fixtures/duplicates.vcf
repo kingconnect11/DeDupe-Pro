@@ -1,0 +1,29 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Bill Thompson
+N:Thompson;William;;;
+NICKNAME:Bill
+EMAIL;TYPE=HOME:bill@home.example
+EMAIL;TYPE=WORK:bill@work.example
+TEL;TYPE=CELL:+1-555-111-2222
+ORG:Thompson Consulting
+TITLE:Owner
+NOTE:First note from A.\nIt has several lines.\nKeep every one.
+URL;TYPE=HOME:https://a.example
+X-CUSTOM-A:alpha-value
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:William Thompson
+N:Thompson;William;;;
+EMAIL;TYPE=WORK;TYPE=PREF:bill@work.example
+EMAIL;TYPE=OTHER:william@other.example
+TEL;TYPE=HOME:+1 (555) 111-2222
+ORG:Different Org Inc
+TITLE:Consultant
+BDAY:19620304
+NOTE:Second note from B.\nCompletely different content.\nAlso multi-line.
+URL;TYPE=WORK:https://b.example
+ADR;TYPE=HOME:;;42 Lane;Town;ST;12345;US
+X-CUSTOM-B:beta-value
+END:VCARD
